@@ -1,365 +1,277 @@
-# Build Guide - Student Events Platform
+# Student Events Platform — Build Guide
 
-> Stack: React + Vite - Supabase - Gemini API - Vercel
-> Read the concept doc first: `STUDENT_EVENTS_PLATFORM.md`
-
----
-
-## Before You Write a Single Line of Code
-
-Lock these decisions or you will rebuild later:
-
-- [ ] What is the suggestion threshold? (recommended: 5 unique suggestions)
-- [ ] One SRC admin for both campuses, or one per campus?
-- [ ] How is attendance tracked in v1? (recommendation: self-report checkbox, upgrade later)
-- [ ] Who owns the Supabase and Vercel accounts long-term?
+> Stack: React + Vite · Supabase · Vercel · Gemini 1.5 Flash (free tier)  
+> Scope: <500 users · 2 campuses · 1 SRC admin
 
 ---
 
-## Accounts to Create First
+## Accounts to Create First (Free)
 
-| Service | URL | What It Does |
+Before writing a single line of code, set these up:
+
+| Service | What It Does | Link |
 |---|---|---|
-| GitHub | github.com | Version control - every step gets committed |
-| Supabase | supabase.com | Database + Auth + API |
-| Vercel | vercel.com | Hosting (connect to GitHub repo) |
-| Google AI Studio | aistudio.google.com | Get your free Gemini API key |
+| Supabase | Database + Auth + API | supabase.com |
+| Vercel | Hosting (deploys from GitHub) | vercel.com |
+| Google AI Studio | Gemini API key (free tier) | aistudio.google.com |
+| GitHub | Version control | github.com |
 
 ---
 
-## Phase 0 - Project Setup
+## Database Schema — Design This Before Coding
 
-**Goal:** Repo exists, tools installed, app runs locally.
+Draw this on paper first. Understand what connects to what.
 
-### Steps
-1. Create a GitHub repository - name it `student-events-platform`
-2. Clone it locally
-3. Inside the repo, run: `npm create vite@latest . -- --template react`
-4. Run `npm install` then `npm run dev` - confirm it opens in browser
-5. Install Supabase client: `npm install @supabase/supabase-js`
-6. Create a `.env` file in the root - add your Supabase URL and anon key (get these from your Supabase project settings)
-7. Add `.env` to `.gitignore` - never commit your keys
+```
+users
+  - id
+  - email
+  - full_name
+  - campus          (musgrave | umhlanga)
+  - role            (student | admin)
+  - created_at
 
-### What to look for
-- App loads at `localhost:5173` without errors
-- `.env` is in `.gitignore` before your first commit
+events
+  - id
+  - title
+  - description
+  - campus_scope    (musgrave | umhlanga | both)
+  - category        (sports | social | academic | cultural | other)
+  - status          (upcoming | past | cancelled)
+  - event_date
+  - created_by      → users.id
+  - created_at
 
----
+suggestions
+  - id
+  - text            (raw free text from student)
+  - campus          (which campus the student is from)
+  - cluster_label   (filled in by AI after clustering)
+  - submitted_by    → users.id
+  - created_at
 
-## Phase 1 - Authentication (Testing Version)
+votes
+  - id
+  - suggestion_id   → suggestions.id
+  - user_id         → users.id
+  - vote_type       (interested | will_attend)
+  - created_at
 
-**Goal:** Students can sign up and log in. Role (student/admin) and campus are assigned.
-**Testing auth:** Any email works. No Richfield restriction yet.
-
-### Supabase Setup
-1. In Supabase dashboard -> Authentication -> enable Email provider
-2. Turn off "Confirm email" for testing (Settings -> Auth -> disable email confirmation)
-3. Create a `profiles` table in Supabase:
-
-```sql
-create table profiles (
-  id uuid references auth.users on delete cascade,
-  email text,
-  role text check (role in ('student', 'admin')) default 'student',
-  campus text check (campus in ('Musgrave', 'uMhlanga')),
-  created_at timestamp default now(),
-  primary key (id)
-);
+feedback
+  - id
+  - event_id        → events.id
+  - user_id         → users.id
+  - rating          (1–5)
+  - comment
+  - did_attend      (true | false)
+  - created_at
 ```
 
-4. Set up a trigger so a profile row is created automatically when a user signs up
-
-### React Steps
-1. Build a `/signup` page - fields: email, password, campus (dropdown: Musgrave / uMhlanga)
-2. Build a `/login` page
-3. On signup, write the profile row to Supabase with role = `student`
-4. Store the session in React context or Zustand
-5. Create a protected route - if not logged in, redirect to `/login`
-6. Hard-code one account as admin for now (update the role in Supabase directly)
-
-### What to look for
-- User signs up -> row appears in `profiles` table in Supabase
-- Login persists on page refresh
-- Non-logged-in users cannot access the app
-- Admin and student see different navigation options
-
-### Auth upgrade (do this last, before launch)
-- Add a check on signup: email must end with `@richfield.ac.za`
-- One line of validation before calling Supabase signup
+**What to look for:** Each table connects through IDs. If you skip this design step and code first, you will rebuild the database at least twice.
 
 ---
 
-## Phase 2 - Database Schema
+## Phase 0 — Project Setup
 
-**Goal:** All tables exist before building features.
-Build the full schema now. Do not add tables mid-feature - it breaks things.
-
-```sql
--- Suggestions submitted by students
-create table suggestions (
-  id uuid default gen_random_uuid() primary key,
-  user_id uuid references profiles(id),
-  campus text,
-  text text not null,
-  cluster_group text,       -- filled by AI later
-  category text,            -- filled by AI later
-  created_at timestamp default now()
-);
-
--- Events promoted by admin from clusters
-create table events (
-  id uuid default gen_random_uuid() primary key,
-  title text not null,
-  description text,
-  campus_scope text check (campus_scope in ('Musgrave', 'uMhlanga', 'Both')),
-  status text check (status in ('poll', 'confirmed', 'past')) default 'poll',
-  event_date date,
-  created_by uuid references profiles(id),
-  created_at timestamp default now()
-);
-
--- Votes on events
-create table votes (
-  id uuid default gen_random_uuid() primary key,
-  user_id uuid references profiles(id),
-  event_id uuid references events(id),
-  vote_type text check (vote_type in ('interested', 'will_attend')),
-  created_at timestamp default now(),
-  unique (user_id, event_id)   -- one vote per student per event
-);
-
--- Post-event feedback
-create table feedback (
-  id uuid default gen_random_uuid() primary key,
-  user_id uuid references profiles(id),
-  event_id uuid references events(id),
-  rating int check (rating between 1 and 5),
-  comment text,
-  attended boolean,
-  created_at timestamp default now(),
-  unique (user_id, event_id)
-);
+```bash
+npm create vite@latest events-platform -- --template react
+cd events-platform
+npm install
+npm install @supabase/supabase-js
 ```
 
-### What to look for
-- All tables created without errors in Supabase SQL editor
-- Foreign keys are correct - test by inserting a row manually
-- The `unique` constraint on votes is critical - without it, one student votes multiple times
-
----
-
-## Phase 3 - Suggestion System
-
-**Goal:** Students submit event ideas. Ideas are stored. Admin can view them.
-
-### Steps
-1. Build a suggestion form - one text area, submit button
-2. On submit, write to `suggestions` table with `user_id` and `campus` from session
-3. Build an admin view - table of all suggestions, sortable by campus and date
-4. Add a character limit on suggestions (recommended: 200 characters max)
-
-### What to look for
-- Suggestion appears in Supabase immediately after submit
-- Student cannot see other students' user IDs (check Supabase Row Level Security)
-- Empty submissions are blocked - validate before sending to DB
-
----
-
-## Phase 4 - AI Clustering
-
-**Goal:** Similar suggestions are grouped. Admin sees a clean chart, not 80 raw text entries.
-
-### How to call the AI (batch, not per suggestion)
-
-```javascript
-// Call this once - pass ALL suggestions at once
-async function clusterSuggestions(suggestions) {
-  const prompt = `
-    You are given a list of student event suggestions.
-    Group them into clusters where similar ideas are combined.
-    For each cluster, give it a short title and a category 
-    (Sports, Social, Academic, Cultural, Other).
-    Return only valid JSON in this format:
-    [
-      {
-        "cluster_title": "...",
-        "category": "...",
-        "suggestions": ["...", "..."]
-      }
-    ]
-    Suggestions: ${JSON.stringify(suggestions)}
-  `;
-
-  const response = await fetch(
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + import.meta.env.VITE_GEMINI_KEY,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }]
-      })
-    }
-  );
-
-  const data = await response.json();
-  return JSON.parse(data.candidates[0].content.parts[0].text);
-}
+Create a `.env` file at root:
+```
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-### Steps
-1. Add a "Run Clustering" button in the admin dashboard
-2. Fetch all suggestions from Supabase
-3. Send to Gemini, get clusters back
-4. Update each suggestion row with its `cluster_group` and `category`
-5. Display result as a bar chart (use Recharts - already available in React)
+Create `src/supabaseClient.js`:
+```js
+import { createClient } from '@supabase/supabase-js'
 
-### What to look for
-- Gemini returns valid JSON - if it doesn't, add error handling that retries once
-- Strip any markdown code fences from the response before parsing JSON
-- The chart renders correctly with real data before moving on
-- API key is in `.env`, never hardcoded
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
----
-
-## Phase 5 - Polling and Voting
-
-**Goal:** Admin promotes a cluster to a poll. Students vote. Counts are public.
-
-### Steps
-1. Admin clicks "Create Poll" on a cluster -> creates a row in `events` table with `status = 'poll'`
-2. Build a `/events` page - shows all active polls, filterable by campus
-3. Each event card shows:
-   - Event title and description
-   - `Interested` count
-   - `Will Attend` count
-   - Two buttons: `Interested` / `I Will Attend`
-4. On vote, write to `votes` table
-5. Show live counts - fetch from Supabase on load
-6. If student already voted, show their current vote and allow them to change it (update the row, do not insert)
-
-### What to look for
-- The `unique` constraint prevents double votes - test this manually
-- Counts update correctly after voting
-- Student from Musgrave cannot vote on a Musgrave-only event if they are from uMhlanga
-
----
-
-## Phase 6 - Event Confirmation
-
-**Goal:** Admin confirms a polled event. It becomes a real event with a date.
-
-### Steps
-1. Admin dashboard shows all polls with vote counts
-2. Admin clicks "Confirm Event" -> adds `event_date` and sets `status = 'confirmed'`
-3. Confirmed events appear on a separate `/confirmed` page
-4. Events page shows countdown or date for confirmed events
-
-### What to look for
-- Status transition is one-way: `poll` -> `confirmed` -> `past`
-- Students can still see vote counts on confirmed events
-
----
-
-## Phase 7 - Post-Event Feedback
-
-**Goal:** After an event, collect did you attend + rating.
-
-### Steps
-1. Cron job or manual admin action sets `status = 'past'` after event date passes
-2. Students who voted `will_attend` get a prompt when they log in: "Did you attend [Event]?"
-3. Feedback form: attended (yes/no), rating (1-5), optional comment
-4. Admin dashboard shows: committed count vs actual attended count
-
-### What to look for
-- Feedback form only shows for past events
-- A student cannot submit feedback twice (unique constraint on feedback table)
-- The gap between `will_attend` votes and actual `attended` is the key metric - display it clearly
-
----
-
-## Phase 8 - Admin Dashboard
-
-**Goal:** One page where SRC admin sees everything.
-
-### What to include
-- Total suggestions this cycle, by campus
-- Cluster chart (category breakdown)
-- Active polls with vote counts
-- Confirmed upcoming events
-- Past events: committed vs attended gap
-- Button to run AI clustering
-- Button to export summary (CSV or copy-paste for sharing with school management)
-
-### What to look for
-- Dashboard loads fast - if queries are slow, add indexes to Supabase tables
-- Admin cannot accidentally delete an event with existing votes without a confirmation dialog
-
----
-
-## Phase 9 - Deploy
-
-**Goal:** Live on the internet, not just localhost.
-
-### Steps
-1. Push all code to GitHub
-2. Go to Vercel -> import your GitHub repo
-3. Add your environment variables in Vercel (same as your `.env` file)
-4. Deploy - Vercel gives you a live URL
-5. Test signup, login, suggestion, vote on the live URL with a real phone
-
-### What to look for
-- Environment variables are set in Vercel, not in the code
-- Test on mobile - most students will use phones
-- Check that Supabase Row Level Security (RLS) is enabled on all tables before going live
-
----
-
-## Phase 10 - Auth Upgrade (Before Real Launch)
-
-**Goal:** Only Richfield students can sign up.
-
-### One change in your signup function
-```javascript
-if (!email.endsWith('@richfield.ac.za')) {
-  setError('You must use your Richfield email to sign up.');
-  return;
-}
+export const supabase = createClient(supabaseUrl, supabaseKey)
 ```
 
-That is the only change needed. Everything else stays the same.
+Push to GitHub. Connect GitHub repo to Vercel. Every push to main deploys automatically.
+
+**What to look for:** Never commit your `.env` file. Add it to `.gitignore` immediately.
+
+---
+
+## Phase 1 — Authentication (Testing Phase)
+
+Use Supabase email/password auth. During testing, any email works.  
+When going live, restrict to Richfield student emails only (one config change).
+
+### What to build:
+- Sign up page (email, password, full name, campus selection)
+- Login page
+- Protected routes — pages only logged-in users can see
+- Role check — admin sees different UI than student
+
+### In Supabase:
+- Enable Email/Password auth in the Auth settings
+- Create a `users` table linked to `auth.users`
+- Use a Supabase trigger to auto-create a user profile on sign-up
+
+### Switching to Richfield Auth later:
+In Supabase Auth settings → Email → add domain restriction `@richfield.ac.za`  
+That is the only change needed.
+
+**What to look for:**
+- Row Level Security (RLS) must be enabled on every table in Supabase. Without it, any logged-in user can read or edit anyone's data. Turn it on. Write policies that say who can read and write what.
+- Test that a student cannot access admin routes. Do this early, not at the end.
+
+---
+
+## Phase 2 — Suggestion Submission
+
+### What to build:
+- A form where students type a free-text event idea
+- Submissions stored in the `suggestions` table with campus + user info
+- Student can see their own past suggestions
+
+### What to look for:
+- Limit one suggestion per user per suggestion round (otherwise one person floods the list)
+- Do not show raw suggestions to other students yet — only admin sees the raw list before clustering
+
+---
+
+## Phase 3 — AI Clustering (Gemini 1.5 Flash)
+
+This is the step that turns "100 different things students typed" into "8 actual ideas."
+
+### How it works:
+1. Admin clicks "Analyse Suggestions"
+2. Your app sends all raw suggestion texts to Gemini API
+3. Gemini returns grouped clusters with a label for each group
+4. You save the `cluster_label` back to each suggestion row
+5. Display results as a table or bar chart
+
+### Gemini API call (run from your backend or a Supabase Edge Function):
+```js
+const response = await fetch(
+  `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+  {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{
+        parts: [{
+          text: `You are grouping student event suggestions. 
+                 Group the following suggestions into clusters where similar ideas are together.
+                 Return only JSON: [{ "label": "cluster name", "suggestions": ["...", "..."] }]
+                 
+                 Suggestions:
+                 ${suggestions.map((s, i) => `${i + 1}. ${s.text}`).join('\n')}`
+        }]
+      }]
+    })
+  }
+)
+```
+
+**What to look for:**
+- Gemini free tier: 15 requests per minute, 1500 per day. At your scale this is more than enough.
+- Always call Gemini from a server-side function (Supabase Edge Function), never directly from the browser. If you call it from the browser, your API key is exposed to anyone who opens DevTools.
+- Parse the JSON Gemini returns carefully — it sometimes wraps it in markdown code blocks. Strip those before parsing.
+
+---
+
+## Phase 4 — Voting
+
+### What to build:
+- A poll page showing clustered event ideas (post-clustering)
+- Each idea shows two buttons: `Interested` and `I Will Attend`
+- A student can only vote once per idea per type
+- Counts are public and update in real time (Supabase has real-time built in)
+
+### What to look for:
+- Prevent double voting — add a unique constraint in Supabase on `(suggestion_id, user_id, vote_type)`
+- Show both counts separately. Do not combine them. The gap between "interested" and "will attend" is the information admin needs.
+- Real-time updates: use Supabase's `supabase.channel()` to subscribe to vote count changes
+
+---
+
+## Phase 5 — Admin Dashboard
+
+### What to build:
+- View all raw suggestions
+- Trigger AI clustering
+- View clustered results + vote counts
+- Confirm an event (moves it to the `events` table with a status of `upcoming`)
+- Set campus scope: Musgrave only / uMhlanga only / Both
+- Add or delete events manually
+- View post-event feedback
+
+### What to look for:
+- Admin role check must happen server-side (in Supabase RLS policy), not just in the UI. Hiding a button is not security.
+- There is one admin (SRC). Build the dashboard for one person, not a team.
+
+---
+
+## Phase 6 — Events Page (Student View)
+
+### What to build:
+- List of confirmed upcoming events
+- Campus filter (show my campus / show both)
+- Each event shows committed attendance count
+- Students can mark themselves as attending (links to their vote)
+- Past events visible with feedback option
+
+---
+
+## Phase 7 — Post-Event Feedback
+
+### What to build:
+- After event date passes, a feedback prompt appears for students who marked attendance
+- Rating (1–5) + optional comment + "did you actually attend?" checkbox
+- Admin sees aggregate results per event
+
+---
+
+## Phase 8 — Deploy and Test
+
+1. Make sure `.env` variables are added to Vercel (Settings → Environment Variables)
+2. Test with 5–10 real students before opening to both campuses
+3. Check Supabase free tier limits: 500MB database, 50MB file storage, 2GB bandwidth — fine for <500 users
+4. Check that Supabase project does not go inactive — **free tier pauses after 1 week of no activity**. Keep it alive during testing or upgrade to a paid plan before go-live.
 
 ---
 
 ## Build Order Summary
 
-| Phase | What You Build | Dependency |
+| Phase | What You Build | Depends On |
 |---|---|---|
-| 0 | Project setup | Nothing |
-| 1 | Auth (testing) | Phase 0 |
-| 2 | Database schema | Phase 1 |
-| 3 | Suggestion system | Phase 2 |
-| 4 | AI clustering | Phase 3 |
-| 5 | Polling + voting | Phase 4 |
-| 6 | Event confirmation | Phase 5 |
+| 0 | Project setup + Supabase connection | Nothing |
+| 1 | Auth (sign up, login, roles, route protection) | Phase 0 |
+| 2 | Suggestion submission form | Phase 1 |
+| 3 | AI clustering + results chart | Phase 2 |
+| 4 | Voting (Interested / Will Attend) | Phase 3 |
+| 5 | Admin dashboard | Phases 1–4 |
+| 6 | Events page (student view) | Phase 5 |
 | 7 | Post-event feedback | Phase 6 |
-| 8 | Admin dashboard | Phases 3-7 |
-| 9 | Deploy | Phase 8 |
-| 10 | Real auth | Phase 9 |
+| 8 | Deploy + test with real users | All |
 
-**Do not skip phases. Do not build Phase 5 before Phase 3 works.**
+Do not skip phases. Phase 1 (auth + roles) is the foundation. Everything downstream depends on knowing who the user is and what they are allowed to do.
 
 ---
 
-## Things That Will Go Wrong (Read This Now)
+## Things That Will Catch You
 
-| Problem | What It Is | Fix |
+| Trap | What Happens | How to Avoid |
 |---|---|---|
-| Supabase RLS blocks all reads | Row Level Security is on by default - your queries return nothing | Add RLS policies for each table |
-| Gemini returns JSON with markdown fences | Response is ` ```json {...} ``` ` not `{...}` | Strip ` ```json ` and ` ``` ` before parsing |
-| Votes count wrong | Student voted twice because unique constraint was missing | Add unique constraint on (user_id, event_id) in votes table - do this in Phase 2 |
-| Env variables not loading on Vercel | Forgot to add them in Vercel dashboard | Add them under Project Settings -> Environment Variables |
-| App works on desktop, broken on mobile | CSS not responsive | Test on mobile at the end of every phase |
+| Skipping RLS | Any user can query any data | Enable RLS on every table, day one |
+| API key in frontend code | Gemini key exposed publicly | Always call AI from server/edge function |
+| No double-vote prevention | Students vote 10 times | Unique DB constraint on votes table |
+| Not testing mobile | Students use phones, not laptops | Check every UI on a phone browser from the start |
+| Supabase free tier pause | App goes offline after inactivity | Ping the project regularly or upgrade before launch |
+| Building features before auth | You rebuild everything to add user context | Auth first, always |
 
 ---
 
-*Build guide - update this as decisions change.*
+*This is a living document. Update it as decisions change.*
