@@ -1,40 +1,52 @@
 # Student Events Platform — Concept Doc
 
+> Scope: Richfield Durban — Musgrave campus + uMhlanga campus  
+> Goal: Cheap, functional, student-driven event platform  
+> Target: < 500 students (v1 pilot)
+
+---
+
 ## Problem
 
-School events have low attendance. Events are created top-down by administration, not by students. The one event with consistent turnout (Sports Day) works because students have ownership and investment in it. Every other event fails the same way: students had no say in it existing.
+School events have low attendance. Events are designed top-down by administration, not by students. The one event with consistent turnout (Sports Day) works because students have ownership and investment in it. Every other event fails the same way — students had no say in it existing.
+
+A secondary problem specific to Richfield Durban: the two campuses (Musgrave and uMhlanga) have almost no interaction outside of Sports Day. They know each other exist. That's it.
+
+---
 
 ## Core Idea
 
-A web platform where students propose, vote on, and commit to events. Admin manages logistics and final approval, but the demand signal comes from students — not from the top.
+A web platform where students propose, vote on, and commit to events — across both campuses. The demand signal comes from students. One SRC admin manages the platform and communicates outcomes to school management.
+
+**Why SRC as admin:** SRC members are students. They understand what other students want. They are also the correct bridge between student demand and school management — that's their role.
+
+The cross-campus angle is not a side feature. It is the differentiator. A shared platform means students from both campuses can see what the other campus wants, vote on joint events, and build a connection that currently does not exist.
 
 ---
 
 ## How It Works
 
 ### 1. Suggestion Phase
-- Any student can submit an event idea in free text
-- AI (Gemini / OpenAI / DeepSeek API) clusters similar suggestions together
-  - e.g. "braai," "end-of-term cookout," "outdoor fire" → grouped as one idea
-- A chart/table shows admin what students are actually asking for, by category
+- Any registered student submits an event idea as free text
+- AI clusters similar suggestions (e.g. "braai," "cookout," "outdoor fire" → one idea)
+- Chart shows admin what students across both campuses are asking for, by category
 
 ### 2. Poll Phase
-- Top clustered ideas go to a school-wide poll
+- Top clustered ideas go to a campus-wide or cross-campus poll
 - Students vote with two options:
   - `Interested` — I like this idea
   - `I will attend` — I am actually coming
-- Both counts are visible to everyone
-  - Social proof: students are more likely to commit when they see others committing
+- Both counts are public — social proof drives real commitment
 
 ### 3. Decision Phase
-- Admin reviews poll results and either confirms or schedules the event
-- Admin can add or remove events, but cannot silently kill a high-vote event without reason
-- Rules for what admin can override must be defined and visible to students
+- SRC admin reviews results and confirms or schedules the event
+- Admin can add or delete events
+- Admin cannot silently kill a high-vote event — override must be visible to students
 
 ### 4. Post-Event
-- After the event, attendees submit quick feedback
+- Attendees submit quick feedback
 - Actual attendance tracked vs committed count
-- Data feeds into future planning
+- Data informs the next event cycle
 
 ---
 
@@ -44,60 +56,95 @@ A web platform where students propose, vote on, and commit to events. Admin mana
 |---|---|
 | Free-text event suggestions | Students define options, not admins |
 | AI text clustering | Groups duplicate/similar ideas into one |
-| Category auto-tagging | Sorts ideas into Sports, Social, Academic, Cultural, etc. |
-| Dual vote (Interested vs Will Attend) | Separates preference from commitment |
-| Public attendance count | Social proof drives real turnout |
-| Suggestion threshold | Event only reaches poll if it gets X unique suggestions — filters noise |
+| Category auto-tagging | Sports, Social, Academic, Cultural, etc. |
+| Dual vote (Interested vs Will Attend) | Separates preference from real commitment |
+| Public attendance count | Social proof drives actual turnout |
+| Suggestion threshold | Event only reaches poll at X unique suggestions |
 | Anonymous suggestion mode | Students suggest honestly without social pressure |
-| Post-event feedback | Builds data on what actually worked |
+| Campus filter | View events per campus or across both |
+| Cross-campus events | Joint events both campuses vote on |
+| Post-event feedback | Tracks what actually worked |
 | Admin trend dashboard | Shows which categories are consistently underserved |
 
 ---
 
-## AI Role
+## Cross-Campus Logic
 
-- **Text clustering** — detect when different phrasings mean the same event
-- **Category detection** — auto-tag suggestions without manual input
-- **Sentiment/popularity scoring** — surface what has genuine demand vs spam submissions
-- **API used** — Gemini, OpenAI, or DeepSeek (TBD based on cost and availability)
+| Event Type | Who Suggests | Who Votes | Who Attends |
+|---|---|---|---|
+| Campus-only | Students of that campus | That campus only | That campus |
+| Cross-campus | Any student | Both campuses | Both campuses |
+
+SRC admin decides whether an event is campus-only or cross-campus at confirmation stage.
+
+---
+
+## AI Role (Free Tier Only)
+
+- **Text clustering** — group similar suggestions into one idea
+- **Category detection** — auto-tag suggestions by type
+- **How it's called** — batch all suggestions in one API call per cycle, not per submission
+
+### API
+
+| Option | Why |
+|---|---|
+| **Gemini 1.5 Flash** | Free tier, fast, handles text clustering well |
+| **DeepSeek** | Near-free per token, strong at text tasks |
+
+At < 500 students, Gemini free tier is sufficient. No paid tier needed in v1.
+
+---
+
+## Stack
+
+| Layer | Tool | Cost |
+|---|---|---|
+| Frontend | React + Vite | Free |
+| Hosting | Vercel | Free tier |
+| Backend + Database + Auth | Supabase | Free tier |
+| AI | Gemini 1.5 Flash | Free tier |
+| Auth — testing | Supabase email/password (any email) | Free |
+| Auth — production | Restrict to @richfield.ac.za domain | Free |
 
 ---
 
 ## User Roles
 
-| Role | Permissions |
-|---|---|
-| Student | Suggest events, vote, commit to attend, give feedback |
-| Admin | View analytics, confirm/schedule events, add/delete events, see attendance gaps |
+| Role | Who | Permissions |
+|---|---|---|
+| Student | Any registered student | Suggest, vote, commit, give feedback |
+| Admin | SRC member | View analytics, confirm events, add/delete events, set campus scope |
 
 ---
 
 ## Known Risks
 
-- **Votes ≠ attendance** — mitigated by the "I will attend" commitment toggle and public count visibility
-- **Admin veto killing trust** — override rules must be transparent and pre-agreed with students
-- **Cold start** — platform needs school buy-in to force initial adoption; needs minimum viable user base before it has value
-- **AI cost** — API usage has a cost, needs to be scoped against school budget or free-tier limits
-
----
-
-## Tech Stack (Preliminary)
-
-- **Frontend** — TBD (React or plain HTML/CSS/JS)
-- **Backend** — TBD (Node.js / Python / Java)
-- **AI** — Gemini API / OpenAI API / DeepSeek API
-- **Database** — TBD
-- **Auth** — School email-based login (to restrict to actual students)
+| Risk | Mitigation |
+|---|---|
+| Votes ≠ attendance | "I will attend" + public count creates social accountability |
+| Admin veto kills trust | Override rules visible to students upfront |
+| Cold start | Both campuses must onboard together; school promotes it |
+| API cost | Free tier only in v1; set alert if approaching limits |
+| Cross-campus resistance | Make cross-campus events opt-in, not default |
 
 ---
 
 ## Open Questions
 
-- What is the minimum vote threshold for an event to reach the poll?
-- Which admin actions are visible to students and which are internal?
-- How is "actual attendance" tracked — manual check-in, QR code, or self-report?
-- Who pays for the AI API calls?
+- What is the suggestion threshold before an event reaches the poll?
+- How is actual attendance tracked — QR, manual, or self-report?
+- Does one SRC admin cover both campuses, or one per campus with shared access?
+- Who maintains the platform after it is built?
 
 ---
 
-*This document is a concept-stage record. Nothing here is final.*
+## Scope Boundaries (What This Is Not)
+
+- Not a ticketing or payment platform
+- Not a social media feed
+- Not scaling beyond two Richfield Durban campuses in v1
+
+---
+
+*Concept-stage document. Nothing here is final.*
