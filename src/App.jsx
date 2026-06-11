@@ -1,4 +1,4 @@
-import { supabase } from './lib/supabaseClient'
+import { supabase } from './supabaseClient'
 
 function App() {
   const hasSupabaseConfig =
