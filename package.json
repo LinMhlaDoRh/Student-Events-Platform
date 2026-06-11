@@ -11,8 +11,10 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "latest",
+    "lucide-react": "^1.17.0",
     "react": "latest",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "react-router-dom": "^7.17.0"
   },
   "devDependencies": {
     "@eslint/js": "latest",

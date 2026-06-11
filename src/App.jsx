@@ -1,34 +1,84 @@
-import { supabase } from './supabaseClient'
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
+import AuthLayout from './components/AuthLayout';
+import SignUp from './pages/SignUp';
+import SignIn from './pages/SignIn';
+import Dashboard from './pages/Dashboard';
+import AdminDashboard from './pages/AdminDashboard';
+import { supabase } from './supabaseClient';
+import './styles.css';
+
+// Admin Route Guard
+const AdminRoute = ({ session, children }) => {
+  if (!session) return <Navigate to="/signin" />;
+  
+  const role = session.user?.user_metadata?.role;
+  
+  if (role !== 'admin') {
+    return (
+      <div className="dashboard-container" style={{ textAlign: 'center', marginTop: '4rem' }}>
+        <h2 style={{ color: 'var(--error-color)' }}>Not Authorised</h2>
+        <p>You do not have permission to view the Admin Dashboard. Only SRC members can access this page.</p>
+        <Link to="/dashboard" className="submit-btn" style={{ maxWidth: '200px', margin: '2rem auto' }}>
+          Back to Dashboard
+        </Link>
+      </div>
+    );
+  }
+  
+  return children;
+};
 
 function App() {
-  const hasSupabaseConfig =
-    Boolean(import.meta.env.VITE_SUPABASE_URL) &&
-    Boolean(import.meta.env.VITE_SUPABASE_ANON_KEY)
-  const isSupabaseClientReady = Boolean(supabase)
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (loading) {
+    return null; // Or a loading spinner
+  }
 
   return (
-    <main className="app-shell">
-      <section className="intro">
-        <p className="eyebrow">Richfield Durban</p>
-        <h1>Student Events Platform</h1>
-        <p className="summary">
-          Phase 0 is ready: React, Vite, Supabase client wiring, and environment
-          placeholders are in place.
-        </p>
-      </section>
-
-      <section className="status-panel" aria-label="Project setup status">
-        <h2>Setup Status</h2>
-        <ul>
-          <li>React + Vite app created</li>
-          <li>Supabase client installed</li>
-          <li>Environment variables kept out of Git</li>
-          <li>{hasSupabaseConfig ? 'Supabase env detected' : 'Waiting for Supabase env values'}</li>
-          <li>{isSupabaseClientReady ? 'Supabase client ready' : 'Supabase client paused safely'}</li>
-        </ul>
-      </section>
-    </main>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route element={<AuthLayout />}>
+          <Route path="/signup" element={!session ? <SignUp /> : <Navigate to="/dashboard" />} />
+          <Route path="/signin" element={!session ? <SignIn /> : <Navigate to="/dashboard" />} />
+          <Route path="/" element={<Navigate to="/signup" />} />
+        </Route>
+        
+        {/* Student Dashboard */}
+        <Route 
+          path="/dashboard" 
+          element={session ? <Dashboard /> : <Navigate to="/signin" />} 
+        />
+        
+        {/* Admin Dashboard */}
+        <Route 
+          path="/admin" 
+          element={
+            <AdminRoute session={session}>
+              <AdminDashboard />
+            </AdminRoute>
+          } 
+        />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
