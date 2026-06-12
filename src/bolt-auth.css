@@ -1,0 +1,427 @@
+/* New Auth Layout (Translated from Bolt Tailwind) */
+.bolt-auth-page {
+  min-height: 100vh;
+  display: flex;
+  background-color: #09101e;
+  font-family: 'Inter', sans-serif;
+}
+
+.bolt-left-panel {
+  display: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 3rem;
+  position: relative;
+  overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  .bolt-left-panel {
+    display: flex;
+    width: 42%;
+  }
+}
+
+.bolt-bg-pattern {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0.025;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.bolt-bg-fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);
+}
+
+.bolt-logo-header {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.bolt-logo-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.5rem;
+  background-color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bolt-logo-text {
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.bolt-hero-text h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: white;
+  line-height: 1.375;
+  margin: 0;
+}
+
+.bolt-hero-text h1 span {
+  color: #94a3b8;
+}
+
+.bolt-hero-desc {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin-top: 1rem;
+  line-height: 1.625;
+  max-width: 20rem;
+}
+
+.bolt-role-info-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.bolt-role-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem;
+  border-radius: 0.75rem;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.bolt-role-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+  color: #94a3b8;
+}
+
+.bolt-role-title {
+  color: #cbd5e1;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.bolt-role-desc {
+  color: #475569;
+  font-size: 0.75rem;
+  line-height: 1.625;
+  margin: 0.125rem 0 0 0;
+}
+
+.bolt-credit {
+  color: #475569;
+  font-size: 0.75rem;
+}
+
+.bolt-right-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2.5rem 1.5rem;
+  overflow-y: auto;
+}
+
+@media (min-width: 640px) {
+  .bolt-right-panel {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .bolt-right-panel {
+    padding-left: 4rem;
+    padding-right: 4rem;
+  }
+}
+
+.bolt-mobile-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-bottom: 2.5rem;
+}
+
+@media (min-width: 1024px) {
+  .bolt-mobile-logo {
+    display: none;
+  }
+}
+
+.bolt-auth-form-container {
+  width: 100%;
+  max-width: 24rem;
+  margin: 0 auto;
+}
+
+.bolt-auth-heading {
+  margin-bottom: 2rem;
+}
+
+.bolt-auth-heading h2 {
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.bolt-auth-heading p {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.bolt-error {
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  background-color: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+}
+
+.bolt-error-icon {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.bolt-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.bolt-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.bolt-label {
+  display: block;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.bolt-input-wrap {
+  position: relative;
+}
+
+.bolt-input-icon {
+  position: absolute;
+  left: 0.875rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.bolt-input {
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  color: white;
+  font-size: 0.875rem;
+  outline: none;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.bolt-input::placeholder {
+  color: #475569;
+}
+
+.bolt-input:focus {
+  border-color: rgba(37, 99, 235, 0.6);
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.bolt-input-select {
+  appearance: none;
+  cursor: pointer;
+}
+.bolt-input-select option {
+  background-color: #0f1a2e;
+}
+
+.bolt-password-toggle {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.bolt-password-toggle:hover {
+  color: #cbd5e1;
+}
+
+.bolt-submit-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  background-color: #2563eb;
+  color: white;
+  font-weight: 500;
+  font-size: 0.875rem;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.bolt-submit-btn:hover {
+  background-color: #3b82f6;
+}
+
+.bolt-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.bolt-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: bolt-spin 0.7s linear infinite;
+}
+
+@keyframes bolt-spin {
+  to { transform: rotate(360deg); }
+}
+
+.bolt-auth-link {
+  text-align: center;
+  color: #475569;
+  font-size: 0.875rem;
+  margin-top: 1.5rem;
+}
+
+.bolt-auth-link a {
+  color: #cbd5e1;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.bolt-auth-link a:hover {
+  color: white;
+}
+
+.bolt-role-toggles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.bolt-role-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: rgba(255, 255, 255, 0.03);
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.bolt-role-btn:hover {
+  color: #cbd5e1;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.bolt-role-btn.active {
+  background-color: rgba(37, 99, 235, 0.15);
+  border-color: rgba(37, 99, 235, 0.5);
+  color: white;
+}
+
+.bolt-password-strength {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1rem;
+  display: flex;
+  gap: 0.25rem;
+}
+
+.bolt-strength-bar {
+  height: 0.25rem;
+  flex: 1;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.08);
+  transition: all 0.2s;
+}
+
+.bolt-strength-bar.red { background-color: #ef4444; }
+.bolt-strength-bar.orange { background-color: #fb923c; }
+.bolt-strength-bar.yellow { background-color: #facc15; }
+.bolt-strength-bar.green { background-color: #4ade80; }
+
+.bolt-helper-text {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.625;
+}
+
+.bolt-forgot-password {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.bolt-forgot-password:hover {
+  color: #cbd5e1;
+}
+.bolt-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}

@@ -1,171 +1,281 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, MapPin, GraduationCap, Shield, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, User, MapPin, AlertCircle, ArrowRight, GraduationCap, Shield } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+
+function getPasswordStrength(p) {
+  let s = 0;
+  if (p.length >= 8) s++;
+  if (p.length >= 12) s++;
+  if (/[A-Z]/.test(p)) s++;
+  if (/[0-9]/.test(p)) s++;
+  if (/[^A-Za-z0-9]/.test(p)) s++;
+  if (s <= 1) return { score: s, label: "Weak", color: "red" };
+  if (s <= 2) return { score: s, label: "Fair", color: "orange" };
+  if (s <= 3) return { score: s, label: "Good", color: "yellow" };
+  return { score: s, label: "Strong", color: "green" };
+}
+
+const CAMPUSES = ["Musgrave", "uMhlanga"];
 
 export default function SignUp() {
   const navigate = useNavigate();
-  const [role, setRole] = useState('student');
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [campus, setCampus] = useState('');
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [campus, setCampus] = useState("");
+  const [role, setRole] = useState("student");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignUp = async (e) => {
+  const isAdmin = role === "admin";
+  const strength = password ? getPasswordStrength(password) : null;
+
+  async function handleSubmit(e) {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
+    setError("");
+    if (!fullName.trim()) { setError("Full name is required."); return; }
+    if (!email.trim()) { setError("Email address is required."); return; }
+    if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
+    if (!isAdmin && !campus) { setError("Please select your campus."); return; }
 
+    setIsLoading(true);
     try {
+      const profilePayload = {
+        full_name: fullName.trim(),
+        campus: isAdmin ? null : campus.toLowerCase(),
+        role: role,
+      };
+
       const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            campus,
-            role,
-          }
-        }
+        email: email.trim(),
+        password: password,
+        options: { data: profilePayload },
       });
 
       if (signUpError) throw signUpError;
       
-      // If successful, we can either wait for email confirmation or login directly
-      // For testing, we'll try to insert into users table manually just in case trigger is missing
+      // Upsert profile in users table (just in case the trigger fails)
       if (data.user) {
-        // We catch errors here silently because the trigger might already do this
-        await supabase.from('users').insert([{
+        await supabase.from('users').upsert({
           id: data.user.id,
           email: data.user.email,
-          full_name: fullName,
-          campus: campus,
-          role: role
-        }]).catch(() => {});
-        
+          ...profilePayload,
+        });
+      }
+      
+      // If session exists, user is logged in automatically
+      if (data.session) {
         navigate('/dashboard');
+      } else {
+        setError("Account created! Please check your email to verify.");
       }
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Sign up failed. Please try again.");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  };
+  }
 
   return (
-    <div className="auth-card">
-      <h2 className="auth-title">Create account</h2>
-      <p className="auth-subtitle">Richfield Student Community</p>
-
-      {error && <div className="error-message">{error}</div>}
-
-      <form onSubmit={handleSignUp}>
-        <div className="form-group">
-          <label className="form-label">I AM A</label>
-          <div className="role-toggle">
-            <button 
-              type="button" 
-              className={`role-btn ${role === 'student' ? 'active' : ''}`}
-              onClick={() => setRole('student')}
-            >
-              <GraduationCap size={16} /> Student
-            </button>
-            <button 
-              type="button" 
-              className={`role-btn ${role === 'admin' ? 'active' : ''}`}
-              onClick={() => setRole('admin')}
-            >
-              <Shield size={16} /> SRC Member
-            </button>
+    <div className="bolt-auth-page">
+      {/* Left panel */}
+      <div className="bolt-left-panel">
+        <div className="bolt-bg-pattern" />
+        <div className="bolt-bg-fade" />
+        
+        <div className="bolt-logo-header">
+          <div className="bolt-logo-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M7 1L9.5 5.5H12L9 8.5L10 12.5L7 10L4 12.5L5 8.5L2 5.5H4.5L7 1Z" fill="white" />
+            </svg>
           </div>
-          {role === 'admin' && (
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
-              SRC members manage events across both campuses on behalf of students.
+          <span className="bolt-logo-text">Campus Events</span>
+        </div>
+
+        <div style={{ position: 'relative' }}>
+          <div className="bolt-hero-text">
+            <h1>
+              Students propose.<br />
+              The campus votes.<br />
+              <span>SRC makes it happen.</span>
+            </h1>
+            <p className="bolt-hero-desc">
+              A shared platform for Musgrave and Umhlanga students to propose, vote on, and commit to events together.
             </p>
+          </div>
+
+          <div className="bolt-role-info-container" style={{ gap: '0.75rem', marginTop: '1.5rem', color: '#94a3b8', fontSize: '0.875rem', lineHeight: '1.5' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+              <div style={{ width: '1.25rem', height: '1.25rem', borderRadius: '0.25rem', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '0.125rem' }}>
+                <GraduationCap size={11} />
+              </div>
+              <span style={{ paddingTop: '0.125rem' }}>Students submit event ideas and vote across both campuses</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+              <div style={{ width: '1.25rem', height: '1.25rem', borderRadius: '0.25rem', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '0.125rem' }}>
+                <Shield size={11} />
+              </div>
+              <span style={{ paddingTop: '0.125rem' }}>SRC reviews demand signals and communicates with management</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bolt-credit">Built by LinMhlaDoRh</div>
+      </div>
+
+      {/* Right form panel */}
+      <div className="bolt-right-panel" style={{ padding: '2.5rem 1.5rem' }}>
+        <div className="bolt-mobile-logo">
+          <div className="bolt-logo-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M7 1L9.5 5.5H12L9 8.5L10 12.5L7 10L4 12.5L5 8.5L2 5.5H4.5L7 1Z" fill="white" />
+            </svg>
+          </div>
+          <span className="bolt-logo-text">Campus Events</span>
+        </div>
+
+        <div className="bolt-auth-form-container">
+          <div className="bolt-auth-heading">
+            <h2>Create account</h2>
+            <p>Richfield Student Community</p>
+          </div>
+
+          {error && (
+            <div className="bolt-error">
+              <AlertCircle size={14} className="bolt-error-icon" />
+              {error}
+            </div>
           )}
-        </div>
 
-        <div className="form-group">
-          <label className="form-label">FULL NAME</label>
-          <div className="input-wrapper">
-            <User size={18} className="input-icon" />
-            <input 
-              type="text" 
-              className="form-input" 
-              placeholder="Your full name"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
-            />
-          </div>
-        </div>
+          <form onSubmit={handleSubmit} className="bolt-form">
+            <div className="bolt-field">
+              <label className="bolt-label">I am a</label>
+              <div className="bolt-role-toggles">
+                <button
+                  type="button"
+                  onClick={() => setRole("student")}
+                  className={`bolt-role-btn ${role === "student" ? "active" : ""}`}
+                >
+                  <GraduationCap size={14} /> Student
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole("admin")}
+                  className={`bolt-role-btn ${role === "admin" ? "active" : ""}`}
+                >
+                  <Shield size={14} /> SRC Member
+                </button>
+              </div>
+              {isAdmin && (
+                <p className="bolt-helper-text">
+                  SRC members manage events across both campuses on behalf of students.
+                </p>
+              )}
+            </div>
 
-        <div className="form-group">
-          <label className="form-label">EMAIL</label>
-          <div className="input-wrapper">
-            <Mail size={18} className="input-icon" />
-            <input 
-              type="email" 
-              className="form-input" 
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-        </div>
+            <div className="bolt-field">
+              <label className="bolt-label">Full name</label>
+              <div className="bolt-input-wrap">
+                <User size={14} className="bolt-input-icon" />
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Your full name"
+                  autoComplete="name"
+                  className="bolt-input"
+                />
+              </div>
+            </div>
 
-        <div className="form-group">
-          <label className="form-label">PASSWORD</label>
-          <div className="input-wrapper">
-            <Lock size={18} className="input-icon" />
-            <input 
-              type={showPassword ? "text" : "password"} 
-              className="form-input" 
-              placeholder="Min. 8 characters"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={8}
-            />
-            <button 
-              type="button" 
-              className="input-action"
-              onClick={() => setShowPassword(!showPassword)}
+            <div className="bolt-field">
+              <label className="bolt-label">Email</label>
+              <div className="bolt-input-wrap">
+                <Mail size={14} className="bolt-input-icon" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  className="bolt-input"
+                />
+              </div>
+            </div>
+
+            <div className="bolt-field">
+              <label className="bolt-label">Password</label>
+              <div className="bolt-input-wrap" style={{ marginBottom: password && strength ? '1.5rem' : '0' }}>
+                <Lock size={14} className="bolt-input-icon" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Min. 8 characters"
+                  autoComplete="new-password"
+                  className="bolt-input"
+                  style={{ paddingRight: '2.5rem' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="bolt-password-toggle"
+                >
+                  {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+                {password && strength && (
+                  <div className="bolt-password-strength">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div key={i} className={`bolt-strength-bar ${i <= strength.score ? strength.color : ""}`} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {!isAdmin && (
+              <div className="bolt-field">
+                <label className="bolt-label">Campus</label>
+                <div className="bolt-input-wrap">
+                  <MapPin size={14} className="bolt-input-icon" />
+                  <select
+                    value={campus}
+                    onChange={(e) => setCampus(e.target.value)}
+                    className="bolt-input bolt-input-select"
+                  >
+                    <option value="">Select your campus</option>
+                    {CAMPUSES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="bolt-submit-btn"
+              style={{ marginTop: !isAdmin ? '0.5rem' : '0' }}
             >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              {isLoading ? (
+                <div className="bolt-spinner" />
+              ) : (
+                <>Create account <ArrowRight size={14} /></>
+              )}
             </button>
-          </div>
-        </div>
+          </form>
 
-        <div className="form-group">
-          <label className="form-label">CAMPUS</label>
-          <div className="input-wrapper">
-            <MapPin size={18} className="input-icon" />
-            <select 
-              className="form-input"
-              value={campus}
-              onChange={(e) => setCampus(e.target.value)}
-              required
-            >
-              <option value="" disabled>Select your campus</option>
-              <option value="musgrave">Musgrave</option>
-              <option value="umhlanga">uMhlanga</option>
-            </select>
-          </div>
+          <p className="bolt-auth-link">
+            Already have an account?{" "}
+            <Link to="/signin">
+              Sign in
+            </Link>
+          </p>
         </div>
-
-        <button type="submit" className="submit-btn" disabled={loading}>
-          {loading ? 'Creating account...' : 'Create account'} <ArrowRight size={16} />
-        </button>
-
-        <div className="auth-footer">
-          Already have an account? <Link to="/signin" className="auth-link">Sign in</Link>
-        </div>
-      </form>
+      </div>
     </div>
   );
 }

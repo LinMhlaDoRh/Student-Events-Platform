@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
-import AuthLayout from './components/AuthLayout';
 import SignUp from './pages/SignUp';
 import SignIn from './pages/SignIn';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import { supabase } from './supabaseClient';
 import './styles.css';
+import './bolt-auth.css';
 
 // Admin Route Guard
 const AdminRoute = ({ session, children }) => {
@@ -55,11 +55,9 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route element={<AuthLayout />}>
-          <Route path="/signup" element={!session ? <SignUp /> : <Navigate to="/dashboard" />} />
-          <Route path="/signin" element={!session ? <SignIn /> : <Navigate to="/dashboard" />} />
-          <Route path="/" element={<Navigate to="/signup" />} />
-        </Route>
+        <Route path="/signup" element={!session ? <SignUp /> : <Navigate to="/dashboard" />} />
+        <Route path="/signin" element={!session ? <SignIn /> : <Navigate to="/dashboard" />} />
+        <Route path="/" element={<Navigate to="/signup" />} />
         
         {/* Student Dashboard */}
         <Route 
