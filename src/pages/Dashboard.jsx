@@ -9,6 +9,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     const checkUser = async () => {
+      if (!supabase) { setLoading(false); navigate('/signin'); return; }
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate('/signin');

@@ -16,16 +16,18 @@ export default function SignIn() {
     setError("");
     if (!email.trim()) { setError("Email address is required."); return; }
     if (!password) { setError("Password is required."); return; }
+    if (!supabase) { setError("Authentication is not configured. Please try again later."); return; }
     
     setIsLoading(true);
     try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password,
       });
 
       if (signInError) throw signInError;
-      navigate('/dashboard');
+      const role = data?.user?.user_metadata?.role;
+      navigate(role === 'admin' ? '/admin' : '/dashboard');
     } catch (err) {
       setError(err.message || "Login failed. Please try again.");
     } finally {

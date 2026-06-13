@@ -57,11 +57,14 @@ function App() {
     return null; // Or a loading spinner
   }
 
+  const role = session?.user?.user_metadata?.role;
+  const homePath = role === 'admin' ? '/admin' : '/dashboard';
+
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/signup" element={!session ? <SignUp /> : <Navigate to="/dashboard" />} />
-        <Route path="/signin" element={!session ? <SignIn /> : <Navigate to="/dashboard" />} />
+        <Route path="/signup" element={!session ? <SignUp /> : <Navigate to={homePath} />} />
+        <Route path="/signin" element={!session ? <SignIn /> : <Navigate to={homePath} />} />
         <Route path="/" element={<Navigate to="/signup" />} />
         
         {/* Student Dashboard */}

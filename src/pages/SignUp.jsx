@@ -39,6 +39,7 @@ export default function SignUp() {
     if (!email.trim()) { setError("Email address is required."); return; }
     if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
     if (!isAdmin && !campus) { setError("Please select your campus."); return; }
+    if (!supabase) { setError("Authentication is not configured. Please try again later."); return; }
 
     setIsLoading(true);
     try {
@@ -67,7 +68,8 @@ export default function SignUp() {
       
       // If session exists, user is logged in automatically
       if (data.session) {
-        navigate('/dashboard');
+        const role = data.user?.user_metadata?.role;
+        navigate(role === 'admin' ? '/admin' : '/dashboard');
       } else {
         setError("Account created! Please check your email to verify.");
       }
