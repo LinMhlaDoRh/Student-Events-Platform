@@ -24,12 +24,10 @@ export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [campus, setCampus] = useState("");
-  const [role, setRole] = useState("student");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const isAdmin = role === "admin";
   const strength = password ? getPasswordStrength(password) : null;
 
   async function handleSubmit(e) {
@@ -38,15 +36,14 @@ export default function SignUp() {
     if (!fullName.trim()) { setError("Full name is required."); return; }
     if (!email.trim()) { setError("Email address is required."); return; }
     if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
-    if (!isAdmin && !campus) { setError("Please select your campus."); return; }
+    if (!campus) { setError("Please select your campus."); return; }
     if (!supabase) { setError("Authentication is not configured. Please try again later."); return; }
 
     setIsLoading(true);
     try {
       const profilePayload = {
         full_name: fullName.trim(),
-        campus: isAdmin ? null : campus.toLowerCase(),
-        role: role,
+        campus: campus.toLowerCase(),
       };
 
       const { data, error: signUpError } = await supabase.auth.signUp({
@@ -57,19 +54,10 @@ export default function SignUp() {
 
       if (signUpError) throw signUpError;
       
-      // Upsert profile in users table (just in case the trigger fails)
-      if (data.user) {
-        await supabase.from('users').upsert({
-          id: data.user.id,
-          email: data.user.email,
-          ...profilePayload,
-        });
-      }
-      
-      // If session exists, user is logged in automatically
+      // New accounts are always students. The SRC admin is promoted
+      // manually in the database, never via self sign-up.
       if (data.session) {
-        const role = data.user?.user_metadata?.role;
-        navigate(role === 'admin' ? '/admin' : '/dashboard');
+        navigate('/dashboard');
       } else {
         setError("Account created! Please check your email to verify.");
       }
@@ -93,7 +81,7 @@ export default function SignUp() {
               <path d="M7 1L9.5 5.5H12L9 8.5L10 12.5L7 10L4 12.5L5 8.5L2 5.5H4.5L7 1Z" fill="white" />
             </svg>
           </div>
-          <span className="bolt-logo-text">Campus Events</span>
+          <span className="bolt-logo-text">Richfield Events</span>
         </div>
 
         <div style={{ position: 'relative' }}>
@@ -135,7 +123,7 @@ export default function SignUp() {
               <path d="M7 1L9.5 5.5H12L9 8.5L10 12.5L7 10L4 12.5L5 8.5L2 5.5H4.5L7 1Z" fill="white" />
             </svg>
           </div>
-          <span className="bolt-logo-text">Campus Events</span>
+          <span className="bolt-logo-text">Richfield Events</span>
         </div>
 
         <div className="bolt-auth-form-container">
@@ -152,31 +140,6 @@ export default function SignUp() {
           )}
 
           <form onSubmit={handleSubmit} className="bolt-form">
-            <div className="bolt-field">
-              <label className="bolt-label">I am a</label>
-              <div className="bolt-role-toggles">
-                <button
-                  type="button"
-                  onClick={() => setRole("student")}
-                  className={`bolt-role-btn ${role === "student" ? "active" : ""}`}
-                >
-                  <GraduationCap size={14} /> Student
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRole("admin")}
-                  className={`bolt-role-btn ${role === "admin" ? "active" : ""}`}
-                >
-                  <Shield size={14} /> SRC Member
-                </button>
-              </div>
-              {isAdmin && (
-                <p className="bolt-helper-text">
-                  SRC members manage events across both campuses on behalf of students.
-                </p>
-              )}
-            </div>
-
             <div className="bolt-field">
               <label className="bolt-label">Full name</label>
               <div className="bolt-input-wrap">
@@ -237,30 +200,28 @@ export default function SignUp() {
               </div>
             </div>
 
-            {!isAdmin && (
-              <div className="bolt-field">
-                <label className="bolt-label">Campus</label>
-                <div className="bolt-input-wrap">
-                  <MapPin size={14} className="bolt-input-icon" />
-                  <select
-                    value={campus}
-                    onChange={(e) => setCampus(e.target.value)}
-                    className="bolt-input bolt-input-select"
-                  >
-                    <option value="">Select your campus</option>
-                    {CAMPUSES.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
+            <div className="bolt-field">
+              <label className="bolt-label">Campus</label>
+              <div className="bolt-input-wrap">
+                <MapPin size={14} className="bolt-input-icon" />
+                <select
+                  value={campus}
+                  onChange={(e) => setCampus(e.target.value)}
+                  className="bolt-input bolt-input-select"
+                >
+                  <option value="">Select your campus</option>
+                  {CAMPUSES.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
               </div>
-            )}
+            </div>
 
             <button
               type="submit"
               disabled={isLoading}
               className="bolt-submit-btn"
-              style={{ marginTop: !isAdmin ? '0.5rem' : '0' }}
+              style={{ marginTop: '0.5rem' }}
             >
               {isLoading ? (
                 <div className="bolt-spinner" />

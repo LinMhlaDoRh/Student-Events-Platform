@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, AlertCircle, ArrowRight, GraduationCap, Shield } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle, ArrowRight, GraduationCap, Shield } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
 export default function SignIn() {
@@ -9,29 +9,48 @@ export default function SignIn() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    setNotice("");
     if (!email.trim()) { setError("Email address is required."); return; }
     if (!password) { setError("Password is required."); return; }
     if (!supabase) { setError("Authentication is not configured. Please try again later."); return; }
     
     setIsLoading(true);
     try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password,
       });
 
       if (signInError) throw signInError;
-      const role = data?.user?.user_metadata?.role;
-      navigate(role === 'admin' ? '/admin' : '/dashboard');
+      // Where to send the user (admin vs. student) is decided centrally in
+      // App.jsx once the session and role have resolved. Navigating here would
+      // race that and briefly flash the student dashboard for admins.
     } catch (err) {
       setError(err.message || "Login failed. Please try again.");
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function handleForgotPassword() {
+    setError("");
+    setNotice("");
+    if (!email.trim()) { setError('Enter your email above first, then tap "Forgot password?".'); return; }
+    if (!supabase) { setError("Authentication is not configured. Please try again later."); return; }
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: window.location.origin + '/reset-password',
+      });
+      if (resetError) throw resetError;
+      setNotice("Password reset link sent. Please check your email.");
+    } catch (err) {
+      setError(err.message || "Could not send reset email. Please try again.");
     }
   }
 
@@ -47,7 +66,7 @@ export default function SignIn() {
               <path d="M7 1L9.5 5.5H12L9 8.5L10 12.5L7 10L4 12.5L5 8.5L2 5.5H4.5L7 1Z" fill="white" />
             </svg>
           </div>
-          <span className="bolt-logo-text">Campus Events</span>
+          <span className="bolt-logo-text">Richfield Events</span>
         </div>
 
         <div style={{ position: 'relative' }}>
@@ -91,7 +110,7 @@ export default function SignIn() {
               <path d="M7 1L9.5 5.5H12L9 8.5L10 12.5L7 10L4 12.5L5 8.5L2 5.5H4.5L7 1Z" fill="white" />
             </svg>
           </div>
-          <span className="bolt-logo-text">Campus Events</span>
+          <span className="bolt-logo-text">Richfield Events</span>
         </div>
 
         <div className="bolt-auth-form-container">
@@ -104,6 +123,12 @@ export default function SignIn() {
             <div className="bolt-error">
               <AlertCircle size={14} className="bolt-error-icon" />
               {error}
+            </div>
+          )}
+          {notice && (
+            <div className="bolt-success">
+              <CheckCircle size={14} className="bolt-error-icon" />
+              {notice}
             </div>
           )}
 
@@ -126,9 +151,13 @@ export default function SignIn() {
             <div className="bolt-field">
               <div className="bolt-label-row">
                 <label className="bolt-label">Password</label>
-                <Link to="#" className="bolt-forgot-password">
+                <button
+                  type="button"
+                  className="bolt-forgot-password"
+                  onClick={handleForgotPassword}
+                >
                   Forgot password?
-                </Link>
+                </button>
               </div>
               <div className="bolt-input-wrap">
                 <Lock size={14} className="bolt-input-icon" />
