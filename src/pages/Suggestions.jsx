@@ -7,7 +7,7 @@ import { prettyCampus, fmtDate, SUGGESTION_STATUS } from '../lib/format';
 import { SendIcon, InfoIcon, LightbulbIcon, TrashIcon, MapPinIcon, SparkleIcon } from '../components/icons';
 
 const MAX = 280;
-/* Preserve the existing Phase-2 rule: one suggestion per student per round. */
+/* One OPEN suggestion per student at a time. A new slot frees up once their idea is decided (approved or rejected). */
 const ONE_PER_ROUND = true;
 const CAMPUSES = ['musgrave', 'umhlanga'];
 
@@ -44,8 +44,8 @@ export default function Suggestions() {
     e.preventDefault();
     if (!idea.trim() || submitting) return;
     if (!supabase) { setError('Not connected to the server.'); return; }
-    if (ONE_PER_ROUND && mine.length > 0) {
-      setError("You've already shared an idea for this round.");
+    if (ONE_PER_ROUND && mine.some((s) => s.status !== 'approved' && s.status !== 'rejected')) {
+      setError("You already have an idea in review. You can suggest again once it's been approved or rejected.");
       return;
     }
     setSubmitting(true);
@@ -99,7 +99,7 @@ export default function Suggestions() {
   }
 
   const campus = prettyCampus(profile?.campus);
-  const alreadySubmitted = ONE_PER_ROUND && mine.length > 0;
+  const alreadySubmitted = ONE_PER_ROUND && mine.some((s) => s.status !== 'approved' && s.status !== 'rejected');
   const overLimit = idea.length > MAX - 30;
 
   return (
@@ -146,7 +146,7 @@ export default function Suggestions() {
             {alreadySubmitted ? (
               <div className="notice notice-blue" style={noticeTop}>
                 <InfoIcon size={16} />
-                <span>You&apos;ve already shared an idea this round. Track its status under &ldquo;Your submissions&rdquo;.</span>
+                <span>You&apos;ve already shared an idea. You can suggest again once it&apos;s been approved or rejected. Track its status under &ldquo;Your submissions&rdquo;.</span>
               </div>
             ) : null}
           </div>
