@@ -437,6 +437,9 @@ a { color: inherit; }
 /* Small avatar variant */
 .avatar.sm { width: 30px; height: 30px; font-size: 12px; border-radius: 9px; }
 
+/* Profile identity card */
+.identity-card { display: flex; align-items: center; gap: 18px; }
+
 /* ----------------------------------------------------------------
    Admin toolbar: search + small inline controls
 ----------------------------------------------------------------- */
@@ -485,6 +488,20 @@ a { color: inherit; }
   .event-right { width: 100%; justify-content: space-between; }
   .donut-wrap { flex-direction: column; align-items: flex-start; }
   .campus-badge .campus-text-long { display: none; }
+
+  /* Student topbar: stop it overflowing on phones */
+  .app-topbar { gap: 10px; padding: 0 14px; }
+  .brand-sub { display: none; }
+  .topbar-right { gap: 8px; }
+  .topbar-right .suggest-label { display: none; }
+  .campus-badge { padding: 6px 10px; }
+}
+
+@media (max-width: 480px) {
+  /* Tiny phones: logo only, keep the actions reachable */
+  .brand > div { display: none; }
+  .app-topbar { gap: 8px; padding: 0 10px; }
+  .identity-card { flex-direction: column; align-items: flex-start; gap: 14px; }
 }
 
 /* Admin dark sidebar variant */

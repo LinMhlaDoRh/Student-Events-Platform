@@ -42,7 +42,7 @@ export default function StudentLayout({ profile, children }) {
         <div className="topbar-right">
           <span className="campus-badge"><MapPinIcon size={13} /> {campus}</span>
           <button className="btn btn-primary btn-sm" onClick={() => navigate('/suggestions')}>
-            <PlusIcon size={15} /> Suggest an Event
+            <PlusIcon size={15} /> <span className="suggest-label">Suggest an Event</span>
           </button>
           <span className="avatar" title={profile?.full_name || profile?.email}>
             {initials(profile?.full_name, profile?.email)}

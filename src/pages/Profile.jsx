@@ -53,7 +53,7 @@ export default function Profile() {
 
       <ErrorBanner>{error}</ErrorBanner>
 
-      <div className="card card-pad" style={identityCard}>
+      <div className="card card-pad identity-card">
         <span className="avatar" style={bigAvatar}>{initials(profile?.full_name, profile?.email)}</span>
         <div style={identityMain}>
           <h2 style={nameText}>{profile?.full_name || 'Student'}</h2>
@@ -97,11 +97,10 @@ export default function Profile() {
   );
 }
 
-const identityCard = { display: 'flex', alignItems: 'center', gap: 18 };
 const bigAvatar = { width: 60, height: 60, fontSize: 20, borderRadius: 16 };
 const identityMain = { minWidth: 0 };
 const nameText = { fontSize: 20, fontWeight: 700, margin: 0, letterSpacing: '-0.01em' };
-const emailText = { margin: '4px 0 0' };
+const emailText = { margin: '4px 0 0', wordBreak: 'break-word' };
 const chipRow = { display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' };
 const statsTop = { marginTop: 18 };
 const tightGrid = { gap: 12 };
