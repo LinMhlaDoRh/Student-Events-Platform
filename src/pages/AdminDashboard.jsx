@@ -4,10 +4,11 @@ import { supabase } from '../supabaseClient';
 import { useProfile, isEventPast } from '../lib/useProfile';
 import AdminLayout from '../components/AdminLayout';
 import { Loader, StatCard, EmptyState, ErrorBanner } from '../components/ui';
-import { prettyCampus } from '../lib/format';
+import { prettyCampus, CATEGORY_LABELS } from '../lib/format';
 import { LightbulbIcon, LayersIcon, CalendarIcon, HeartIcon, TrendingIcon, ArrowRightIcon } from '../components/icons';
 
 const CAMPUSES = ['musgrave', 'umhlanga'];
+const CATEGORY_KEYS = ['sports', 'social', 'academic', 'cultural', 'other'];
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -22,10 +23,15 @@ export default function AdminDashboard() {
     if (!supabase) { setError('Not connected to Supabase.'); setDataLoading(false); return; }
     setDataLoading(true);
     setError('');
-    const [sRes, vRes, eRes] = await Promise.all([
-      supabase.from('suggestions').select('id, text, campus, cluster_label, status'),
+    // Suggestions may not have the optional `category` column yet (added in a
+    // later AI phase). Try with it, then fall back so the dashboard never breaks.
+    let sRes = await supabase.from('suggestions').select('id, text, campus, cluster_label, status, category');
+    if (sRes.error && /category/i.test(sRes.error.message || '')) {
+      sRes = await supabase.from('suggestions').select('id, text, campus, cluster_label, status');
+    }
+    const [vRes, eRes] = await Promise.all([
       supabase.from('votes').select('suggestion_id, vote_type'),
-      supabase.from('events').select('id, status, event_date, campus_scope'),
+      supabase.from('events').select('id, status, event_date, campus_scope, category'),
     ]);
     if (sRes.error) setError(sRes.error.message);
     setSuggestions(sRes.data || []);
@@ -67,9 +73,26 @@ export default function AdminDashboard() {
     return out;
   }, [suggestions, interestedFor]);
 
+  // Category demand vs supply. "Underserved" = students are asking for a
+  // category (suggestions / interest) but few or no events are scheduled for it.
+  const categoryTrend = useMemo(() => {
+    const rows = CATEGORY_KEYS.map((key) => {
+      const sugg = suggestions.filter((s) => (s.category || '').toLowerCase() === key);
+      const interested = sugg.reduce((sum, s) => sum + interestedFor(s.id), 0);
+      const evCount = events.filter(
+        (e) => (e.category || '').toLowerCase() === key && e.status !== 'cancelled',
+      ).length;
+      return { key, label: CATEGORY_LABELS[key] || key, ideas: sugg.length, interested, events: evCount };
+    }).filter((r) => r.ideas > 0 || r.events > 0);
+    rows.sort((a, b) => (b.interested - a.interested) || (b.ideas - a.ideas));
+    return rows;
+  }, [suggestions, events, interestedFor]);
+
   if (loading || dataLoading) {
     return <AdminLayout profile={profile}><Loader full /></AdminLayout>;
   }
+
+  const trendMax = categoryTrend.reduce((m, r) => Math.max(m, r.interested), 0) || 1;
 
   return (
     <AdminLayout profile={profile}>
@@ -132,14 +155,35 @@ export default function AdminDashboard() {
       <div className="section-head">
         <h2 className="section-title"><TrendingIcon size={16} /> Underserved Categories Trend</h2>
       </div>
-      {/* FLAG: AI category-trend analytics (Phase 3 / Gemini clustering) is not
-          implemented in the current system. We preserve the reference layout
-          space but do not fabricate a chart or data. */}
-      <EmptyState
-        icon={<TrendingIcon size={22} />}
-        title="Trend analysis not available yet"
-        sub="Automatic category clustering and the underserved-categories trend are part of a planned AI phase that isn't built yet, so there's no data to chart here."
-      />
+      <div className="card card-pad">
+        {categoryTrend.length === 0 ? (
+          <EmptyState
+            icon={<TrendingIcon size={22} />}
+            title="No category data yet"
+            sub="Run AI analysis on the Suggestions page to tag suggestions by category. Demand by category will then appear here."
+            small
+          />
+        ) : (
+          <>
+            <p className="page-sub">Categories students are asking for, ranked by interest. A category with demand but no scheduled events is underserved.</p>
+            <div className="bars">
+              {categoryTrend.map((r) => {
+                const barStyle = { width: `${Math.round((r.interested / trendMax) * 100)}%` };
+                const underserved = r.events === 0 && (r.interested > 0 || r.ideas > 0);
+                return (
+                  <div key={r.key} className="bar-row">
+                    <div className="bar-label">
+                      <span className="bar-name">{r.label} {underserved ? <span className="badge badge-amber">Underserved</span> : null}</span>
+                      <span className="bar-val">{r.interested} interested · {r.ideas} idea{r.ideas === 1 ? '' : 's'} · {r.events} event{r.events === 1 ? '' : 's'}</span>
+                    </div>
+                    <div className="bar-track"><div className="bar-fill" style={barStyle} /></div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </div>
     </AdminLayout>
   );
 }
