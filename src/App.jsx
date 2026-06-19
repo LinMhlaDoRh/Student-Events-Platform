@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import SignUp from './pages/SignUp';
 import SignIn from './pages/SignIn';
 import Dashboard from './pages/Dashboard';
@@ -112,92 +113,95 @@ function App() {
   const homePath = role === 'admin' ? '/admin' : '/dashboard';
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/signup" element={!session ? <SignUp /> : <Navigate to={homePath} replace />} />
-        <Route path="/signin" element={!session ? <SignIn /> : <Navigate to={homePath} replace />} />
-        <Route path="/" element={<Navigate to="/signup" replace />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+    <>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/signup" element={!session ? <SignUp /> : <Navigate to={homePath} replace />} />
+          <Route path="/signin" element={!session ? <SignIn /> : <Navigate to={homePath} replace />} />
+          <Route path="/" element={<Navigate to="/signup" replace />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
-        <Route
-          path="/dashboard"
-          element={
-            !session ? (
-              <Navigate to="/signin" replace />
-            ) : role === 'admin' ? (
-              <Navigate to="/admin" replace />
-            ) : (
-              <Dashboard />
-            )
-          }
-        />
+          <Route
+            path="/dashboard"
+            element={
+              !session ? (
+                <Navigate to="/signin" replace />
+              ) : role === 'admin' ? (
+                <Navigate to="/admin" replace />
+              ) : (
+                <Dashboard />
+              )
+            }
+          />
 
-        <Route
-          path="/admin"
-          element={
-            <AdminRoute session={session} role={role}>
-              <AdminDashboard />
-            </AdminRoute>
-          }
-        />
-        <Route
-          path="/suggestions"
-          element={session ? <Suggestions /> : <Navigate to="/signin" replace />}
-        />
-        <Route
-          path="/vote"
-          element={session ? <Voting /> : <Navigate to="/signin" replace />}
-        />
-        <Route
-          path="/events"
-          element={session ? <Events /> : <Navigate to="/signin" replace />}
-        />
-        <Route
-          path="/profile"
-          element={session ? <Profile /> : <Navigate to="/signin" replace />}
-        />
-        <Route
-          path="/admin/suggestions"
-          element={
-            <AdminRoute session={session} role={role}>
-              <AdminSuggestions />
-            </AdminRoute>
-          }
-        />
-        <Route
-          path="/admin/events"
-          element={
-            <AdminRoute session={session} role={role}>
-              <AdminEvents />
-            </AdminRoute>
-          }
-        />
-        <Route
-          path="/admin/feedback"
-          element={
-            <AdminRoute session={session} role={role}>
-              <AdminFeedback />
-            </AdminRoute>
-          }
-        />
-        <Route
-          path="/admin/students"
-          element={
-            <AdminRoute session={session} role={role}>
-              <AdminStudents />
-            </AdminRoute>
-          }
-        />
-        <Route
-          path="/admin/settings"
-          element={
-            <AdminRoute session={session} role={role}>
-              <AdminSettings />
-            </AdminRoute>
-          }
-        />
-      </Routes>
-    </BrowserRouter>
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute session={session} role={role}>
+                <AdminDashboard />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/suggestions"
+            element={session ? <Suggestions /> : <Navigate to="/signin" replace />}
+          />
+          <Route
+            path="/vote"
+            element={session ? <Voting /> : <Navigate to="/signin" replace />}
+          />
+          <Route
+            path="/events"
+            element={session ? <Events /> : <Navigate to="/signin" replace />}
+          />
+          <Route
+            path="/profile"
+            element={session ? <Profile /> : <Navigate to="/signin" replace />}
+          />
+          <Route
+            path="/admin/suggestions"
+            element={
+              <AdminRoute session={session} role={role}>
+                <AdminSuggestions />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/events"
+            element={
+              <AdminRoute session={session} role={role}>
+                <AdminEvents />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/feedback"
+            element={
+              <AdminRoute session={session} role={role}>
+                <AdminFeedback />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/students"
+            element={
+              <AdminRoute session={session} role={role}>
+                <AdminStudents />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/settings"
+            element={
+              <AdminRoute session={session} role={role}>
+                <AdminSettings />
+              </AdminRoute>
+            }
+          />
+        </Routes>
+      </BrowserRouter>
+      <Analytics />
+    </>
   );
 }
 
