@@ -204,8 +204,8 @@ export default function Events() {
         <div className="field">
           <label className="field-label">Did you attend?</label>
           <div className="choice-row">
-            <button className={`choice ${didAttend === true ? 'active' : ''}`} onClick={() => setDidAttend(true)}>Yes, I attended</button>
-            <button className={`choice ${didAttend === false ? 'active' : ''}`} onClick={() => setDidAttend(false)}>No, I didn&apos;t</button>
+            <button className={`choice ${didAttend === true ? 'on-yes' : ''}`} onClick={() => setDidAttend(true)}>Yes, I attended</button>
+            <button className={`choice ${didAttend === false ? 'on-no' : ''}`} onClick={() => setDidAttend(false)}>No, I didn&apos;t</button>
           </div>
         </div>
         <div className="field">
