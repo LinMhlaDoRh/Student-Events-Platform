@@ -15,6 +15,8 @@ import AdminStudents from './pages/AdminStudents';
 import AdminSettings from './pages/AdminSettings';
 import ResetPassword from './pages/ResetPassword';
 import { supabase } from './supabaseClient';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import './styles.css';
 import './bolt-auth.css';
 import './theme.css';
@@ -197,6 +199,8 @@ function App() {
           }
         />
       </Routes>
+      <Analytics />
+      <SpeedInsights />
     </BrowserRouter>
   );
 }
