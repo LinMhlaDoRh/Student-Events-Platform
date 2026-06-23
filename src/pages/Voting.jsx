@@ -1,3 +1,7 @@
+/**
+ * Active polls: students register interest in suggested events.
+ */
+
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useProfile } from '../lib/useProfile';

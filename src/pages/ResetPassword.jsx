@@ -1,3 +1,7 @@
+/**
+ * Password reset screen, opened from a Supabase recovery link.
+ */
+
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Lock, Eye, EyeOff, AlertCircle, ArrowRight } from 'lucide-react';

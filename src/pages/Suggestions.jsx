@@ -1,3 +1,7 @@
+/**
+ * Student suggestions: submit event ideas (optionally anonymous) and browse community ideas.
+ */
+
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useProfile } from '../lib/useProfile';

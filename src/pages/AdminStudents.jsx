@@ -1,3 +1,7 @@
+/**
+ * SRC admin students: directory of registered students per campus.
+ */
+
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useProfile } from '../lib/useProfile';

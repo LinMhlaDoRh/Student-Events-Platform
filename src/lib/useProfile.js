@@ -1,3 +1,7 @@
+/**
+ * Hook that loads the signed-in user's profile and role from the public.users table.
+ */
+
 import { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 

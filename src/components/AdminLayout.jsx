@@ -1,3 +1,7 @@
+/**
+ * Shared shell (sidebar + nav) for SRC admin pages.
+ */
+
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';

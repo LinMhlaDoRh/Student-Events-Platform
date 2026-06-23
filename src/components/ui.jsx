@@ -1,3 +1,7 @@
+/**
+ * Reusable UI primitives (loader, cards, badges, charts, modal, toasts, etc.).
+ */
+
 import React, { useEffect } from 'react';
 import { XIcon } from './icons';
 

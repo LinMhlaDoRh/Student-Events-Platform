@@ -1,3 +1,7 @@
+/**
+ * Sign-up screen: account creation with campus selection and live password-strength feedback.
+ */
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, User, MapPin, AlertCircle, ArrowRight, GraduationCap, Shield } from 'lucide-react';

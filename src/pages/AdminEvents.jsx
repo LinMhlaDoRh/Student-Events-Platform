@@ -1,3 +1,7 @@
+/**
+ * SRC admin events: create and manage scheduled events.
+ */
+
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useProfile } from '../lib/useProfile';

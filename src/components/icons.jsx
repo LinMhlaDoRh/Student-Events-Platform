@@ -1,3 +1,7 @@
+/**
+ * Inline SVG icon set used across the app.
+ */
+
 import React from 'react';
 
 /* Lightweight inline icon set (Feather/Lucide style, no runtime dependency). */

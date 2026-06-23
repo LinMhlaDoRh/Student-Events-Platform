@@ -1,3 +1,7 @@
+/**
+ * SRC admin suggestions: review clustered ideas, run AI clustering, and advance the status workflow.
+ */
+
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useProfile } from '../lib/useProfile';

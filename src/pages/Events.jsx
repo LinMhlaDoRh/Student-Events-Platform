@@ -1,3 +1,7 @@
+/**
+ * Events: campus-scoped upcoming and past events with RSVP.
+ */
+
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useProfile, isEventPast } from '../lib/useProfile';

@@ -1,3 +1,7 @@
+/**
+ * Reusable card components shared across pages.
+ */
+
 import React from 'react';
 import { prettyScope, fmtDateTime, CATEGORY_LABELS, titleize } from '../lib/format';
 import { CalendarIcon, UsersIcon, HeartIcon, CheckIcon } from './icons';

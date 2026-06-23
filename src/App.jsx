@@ -1,3 +1,7 @@
+/**
+ * Root component: Supabase session handling, role-based routing, and admin route guards.
+ */
+
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import SignUp from './pages/SignUp';

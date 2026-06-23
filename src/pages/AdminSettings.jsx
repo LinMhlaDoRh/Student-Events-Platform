@@ -1,3 +1,7 @@
+/**
+ * SRC admin settings: platform and campus overview.
+ */
+
 import React from 'react';
 import { useProfile } from '../lib/useProfile';
 import AdminLayout from '../components/AdminLayout';

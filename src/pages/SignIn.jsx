@@ -1,3 +1,7 @@
+/**
+ * Sign-in screen: email/password auth, one-click demo logins, and password reset.
+ */
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle, ArrowRight, GraduationCap, Shield } from 'lucide-react';

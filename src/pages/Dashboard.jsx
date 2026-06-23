@@ -1,3 +1,7 @@
+/**
+ * Student home: active polls and a snapshot of the student's activity.
+ */
+
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';

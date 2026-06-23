@@ -1,3 +1,7 @@
+/**
+ * SRC admin feedback: ratings, attendance, and comments collected after events.
+ */
+
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useProfile } from '../lib/useProfile';

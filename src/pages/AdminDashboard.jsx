@@ -1,3 +1,7 @@
+/**
+ * SRC admin dashboard: demand metrics, clustered suggestions by campus, and the underserved-category trend.
+ */
+
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';

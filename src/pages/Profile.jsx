@@ -1,3 +1,7 @@
+/**
+ * Student profile: personal details and the student's submitted suggestions.
+ */
+
 import React, { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useProfile } from '../lib/useProfile';
