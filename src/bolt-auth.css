@@ -438,3 +438,22 @@
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
 }
+
+/* Prevent iOS Safari from auto-zooming when an auth input is focused.
+   Inputs below 16px trigger a zoom-in that persists after login/sign-up,
+   leaving the student dashboard shifted/misaligned until a manual refresh. */
+@media (max-width: 768px) {
+  .bolt-input,
+  .bolt-input-select { font-size: 16px; }
+}
+
+/* Demo access buttons (let anyone explore without signing up) */
+.bolt-demo { margin-top: 1.25rem; }
+.bolt-demo-divider { display: flex; align-items: center; gap: 0.75rem; color: #64748b; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.875rem; }
+.bolt-demo-divider::before, .bolt-demo-divider::after { content: ""; flex: 1; height: 1px; background: rgba(255, 255, 255, 0.08); }
+.bolt-demo-row { display: flex; gap: 0.625rem; }
+.bolt-demo-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.625rem 0.75rem; border-radius: 0.75rem; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); color: #e2e8f0; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+.bolt-demo-btn:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(37, 99, 235, 0.55); }
+.bolt-demo-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.bolt-demo-note { text-align: center; color: #64748b; font-size: 0.68rem; margin: 0.625rem 0 0; }
+@media (max-width: 480px) { .bolt-demo-row { flex-direction: column; } }
