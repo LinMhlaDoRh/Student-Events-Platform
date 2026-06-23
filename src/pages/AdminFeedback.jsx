@@ -71,7 +71,7 @@ export default function AdminFeedback() {
             <StatCard icon={<UsersIcon size={19} />} value={summary.notAttended} label="Didn't attend" />
           </div>
 
-          <div className="grid grid-2">
+          <div className="grid grid-2" style={chartsGap}>
             <div className="card card-pad">
               <h3 className="section-title nomargin">Rating distribution</h3>
               <div className="bars" style={barsTop}>
@@ -138,6 +138,7 @@ export default function AdminFeedback() {
 }
 
 const barsTop = { marginTop: 16 };
+const chartsGap = { marginTop: 28 };
 const tightGrid = { gap: 12 };
 const commentText = { fontSize: 14, color: 'var(--text-2)', lineHeight: 1.55, margin: '12px 0 8px' };
 const metaText = { margin: 0, fontSize: 12.5 };

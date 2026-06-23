@@ -129,8 +129,16 @@
 }
 
 .bolt-credit {
-  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: #64748b;
   font-size: 0.75rem;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.bolt-credit:hover {
+  color: #cbd5e1;
 }
 
 .bolt-right-panel {
@@ -412,9 +420,13 @@
 }
 
 .bolt-forgot-password {
+  background: none;
+  border: none;
+  padding: 0;
   font-size: 0.75rem;
-  color: #64748b;
+  color: #94a3b8;
   text-decoration: none;
+  cursor: pointer;
   transition: color 0.2s;
 }
 .bolt-forgot-password:hover {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle, ArrowRight, GraduationCap, Shield } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle, ArrowRight, GraduationCap, Shield, Github } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
 const DEMO_PASSWORD = 'demo1234';
@@ -121,7 +121,7 @@ export default function SignIn() {
           </div>
         </div>
 
-        <div className="bolt-credit">Built by LinMhlaDoRh</div>
+        <a className="bolt-credit" href="https://github.com/LinMhlaDoRh" target="_blank" rel="noreferrer"><Github size={13} /> Built by LinMhlaDoRh</a>
       </div>
 
       {/* Right form panel */}

@@ -153,7 +153,7 @@ export default function Suggestions() {
 
           <div className="notice notice-blue" style={noticeTop}>
             <InfoIcon size={16} />
-            <span>Once enough students show interest in similar ideas, the SRC turns them into a poll — then a confirmed event.</span>
+            <span>Once enough students show interest in similar ideas, the SRC turns them into a poll, then a confirmed event.</span>
           </div>
         </div>
 

@@ -59,7 +59,7 @@ export default function AdminSettings() {
 
       <div className="notice notice-blue" style={noticeTop}>
         <InfoIcon size={16} />
-        <span>Configurable platform settings aren&apos;t wired to the database yet, so there are no editable options to save here. This page is reserved for them.</span>
+        <span>Campuses and platform details are managed in code to keep the demo stable. Editable, database-backed settings are a planned enhancement.</span>
       </div>
     </AdminLayout>
   );
