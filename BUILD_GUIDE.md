@@ -1,6 +1,6 @@
 # Student Events Platform — Build Guide
 
-> Stack: React + Vite · Supabase · Vercel · Gemini 1.5 Flash (free tier)  
+> Stack: React + Vite · Supabase · Vercel · Gemini Flash (free tier)  
 > Scope: <500 users · 2 campuses · 1 SRC admin
 
 ---
@@ -141,7 +141,7 @@ That is the only change needed.
 
 ---
 
-## Phase 3 — AI Clustering (Gemini 1.5 Flash)
+## Phase 3 — AI Clustering (Gemini Flash)
 
 This is the step that turns "100 different things students typed" into "8 actual ideas."
 

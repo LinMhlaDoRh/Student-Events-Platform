@@ -1,7 +1,7 @@
 // Supabase Edge Function: cluster-suggestions
 // -------------------------------------------------
 // Triggered by the SRC admin "Analyse Suggestions" button. Sends every
-// suggestion to Google Gemini 1.5 Flash in ONE batched call, which:
+// suggestion to Google Gemini Flash in ONE batched call, which:
 //   1. groups similar/duplicate ideas under a shared cluster_label
 //   2. assigns a category (sports | social | academic | cultural | other)
 // ...then writes both back to the suggestions table.

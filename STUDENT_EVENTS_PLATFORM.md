@@ -89,7 +89,7 @@ SRC admin decides whether an event is campus-only or cross-campus at confirmatio
 
 | Option | Why |
 |---|---|
-| **Gemini 1.5 Flash** | Free tier, fast, handles text clustering well |
+| **Gemini Flash** | Free tier, fast, handles text clustering well |
 | **DeepSeek** | Near-free per token, strong at text tasks |
 
 At < 500 students, Gemini free tier is sufficient. No paid tier needed in v1.
@@ -103,7 +103,7 @@ At < 500 students, Gemini free tier is sufficient. No paid tier needed in v1.
 | Frontend | React + Vite | Free |
 | Hosting | Vercel | Free tier |
 | Backend + Database + Auth | Supabase | Free tier |
-| AI | Gemini 1.5 Flash | Free tier |
+| AI | Gemini Flash | Free tier |
 | Auth — testing | Supabase email/password (any email) | Free |
 | Auth — production | Restrict to @richfield.ac.za domain | Free |
 

@@ -1,21 +1,18 @@
--- Phase 2: let admins read the full student roster.
+-- Phase 2 - Let admins read the full student roster.
 --
--- WHY THIS IS NEEDED
--- The public.users table has Row Level Security enabled, and Phase 1 only added
--- an "own profile" SELECT policy (auth.uid() = id). That is why the Admin ->
--- Students page can only ever see the signed-in admin's own row. This migration
--- adds a SELECT policy that lets admins read every profile.
+-- Phase 1 only gave users an "own row" SELECT policy, which is why the admin
+-- Students page could previously only ever show the signed-in admin. This adds a
+-- second SELECT policy for admins. Postgres OR's SELECT policies together, so
+-- students still see only themselves while admins see everyone.
 --
--- We use a SECURITY DEFINER helper function so the role check does NOT re-trigger
--- RLS on public.users (which would cause infinite recursion).
---
--- Run this in the Supabase SQL editor (Dashboard -> SQL).
+-- is_admin() is repeated here (identical to phase1-auth.sql) so this file can be
+-- re-run on its own without depending on load order.
 
 create or replace function public.is_admin()
 returns boolean
 language sql
 security definer
-set search_path = public
+set search_path = ''
 stable
 as $$
   select exists (
@@ -26,14 +23,12 @@ as $$
   );
 $$;
 
--- Admins can read all profiles (the Students roster).
+grant execute on function public.is_admin() to authenticated;
+
 drop policy if exists "Admins can read all profiles" on public.users;
 create policy "Admins can read all profiles"
-on public.users
-for select
-to authenticated
-using (public.is_admin());
+  on public.users for select
+  to authenticated
+  using (public.is_admin());
 
--- NOTE: the existing "Users can read their own profile" policy stays in place.
--- Postgres combines SELECT policies with OR, so students keep seeing only
--- themselves while admins see everyone.
+grant select on public.users to authenticated;

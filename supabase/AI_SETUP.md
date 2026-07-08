@@ -1,46 +1,44 @@
-# AI Setup - Suggestion clustering & category tagging
+# AI clustering setup
 
-This wires the admin **"Analyse Suggestions"** button to Google **Gemini 1.5 Flash**
-via a Supabase **Edge Function**. The API key stays server-side (never in the app).
+This wires the admin "Analyse Suggestions" button to Google Gemini through a
+Supabase Edge Function. The function reads the un-clustered suggestions, sends
+them to Gemini in one batched call, and returns suggested groupings that the
+admin can accept or edit.
 
-## 1. Database column
-Run `supabase/phase3-ai.sql` in **Supabase -> SQL editor**. (Adds the `category` column.)
+The key design point: the Gemini API key stays on the server. It's an Edge
+Function secret, never a frontend variable, so it can't leak into the browser
+bundle. The function also checks that the caller is a signed-in admin before it
+does anything, so a student can't trigger paid AI calls.
 
-## 2. Get a Gemini API key
-1. Go to **Google AI Studio**: aistudio.google.com/app/apikey
-2. Create an API key (free tier is fine for < 500 students).
+## What you need
 
-## 3. Deploy the Edge Function
-The function lives in `supabase/functions/cluster-suggestions/`.
+- The Supabase CLI, logged in and linked to your project.
+- A Google AI Studio API key for Gemini.
 
-**Option A - Supabase CLI (recommended):**
-```bash
-# one-time
-npm i -g supabase
-supabase login
-supabase link --project-ref YOUR_PROJECT_REF
+## Steps
 
-# set the secret (do NOT commit your key)
-supabase secrets set GEMINI_API_KEY=your_key_here
+1. Set the secrets on your project:
+   ```bash
+   supabase secrets set GEMINI_API_KEY=your_key_here
+   supabase secrets set GEMINI_MODEL=gemini-2.0-flash   # optional; this is the default
+   ```
+   Gemini's Flash models are a good fit here - they're fast, cheap, and more than
+   capable of grouping short text. If Google renames or retires the default,
+   point `GEMINI_MODEL` at a current Flash model without changing any code.
 
-# deploy
-supabase functions deploy cluster-suggestions
-```
+2. Deploy the function:
+   ```bash
+   supabase functions deploy cluster-suggestions
+   ```
 
-**Option B - Dashboard:** Edge Functions -> Create a function named
-`cluster-suggestions`, paste in `index.ts`, then add the `GEMINI_API_KEY`
-secret under Edge Functions -> Secrets.
-
-> `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` are
-> injected automatically - you only set `GEMINI_API_KEY`.
-
-## 4. Use it
-Sign in as an admin -> **Suggestions** -> click **Analyse Suggestions**.
-It batches all suggestions into one Gemini call, then fills in each row's
-cluster label + category. Students then see grouped ideas ("N similar") in
-their Community Suggestions feed.
+3. In the app, sign in as an admin, open the Suggestions page, and use
+   "Analyse Suggestions". Review the groupings before saving - the AI does a
+   first pass, the admin makes the call.
 
 ## Notes
-- Only authenticated **admins** can run it (checked inside the function).
-- Re-running re-analyses everything - safe to run after each new batch of ideas.
-- If the button errors, confirm the function is deployed and `GEMINI_API_KEY` is set.
+
+- If the button returns an error, check the function logs
+  (`supabase functions logs cluster-suggestions`). The usual causes are a missing
+  `GEMINI_API_KEY` secret or an out-of-date model name.
+- The function verifies the caller's admin role server-side, so it's safe to have
+  the button visible only to admins in the UI and still trust the backend check.
