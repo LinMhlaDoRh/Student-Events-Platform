@@ -22,9 +22,13 @@ function filesUnder(directory, suffixes) {
 
 test('production source contains no shared demo credentials', () => {
   const source = filesUnder('src', ['.js', '.jsx']).map((file) => readFileSync(file, 'utf8')).join('\n');
+<<<<<<< HEAD
   // Split literals so this file doesn't itself trigger the secret-pattern gate.
   const demoCredRe = new RegExp(['demo', '1234'].join('') + '|admin[.]demo@|DEMO_PASSWORD');
   assert.doesNotMatch(source, demoCredRe);
+=======
+  assert.doesNotMatch(source, /demo1234|admin\.demo@|DEMO_PASSWORD/);
+>>>>>>> 295b3084c986122e4f1871f6d8288c69902bd848
 });
 
 test('React source contains no unsafe HTML or code execution sinks', () => {
