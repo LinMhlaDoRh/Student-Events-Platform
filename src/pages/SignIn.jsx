@@ -3,16 +3,12 @@
  */
 
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle, ArrowRight, GraduationCap, Shield } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
-const DEMO_PASSWORD = 'demo1234';
-const DEMO_STUDENT_EMAIL = 'student.demo@richfield.ac.za';
-const DEMO_ADMIN_EMAIL = 'admin.demo@richfield.ac.za';
 
 export default function SignIn() {
-  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -39,26 +35,8 @@ export default function SignIn() {
       // Where to send the user (admin vs. student) is decided centrally in
       // App.jsx once the session and role have resolved. Navigating here would
       // race that and briefly flash the student dashboard for admins.
-    } catch (err) {
-      setError(err.message || "Login failed. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  async function demoLogin(kind) {
-    setError("");
-    setNotice("");
-    if (!supabase) { setError("Authentication is not configured. Please try again later."); return; }
-    const creds = kind === 'admin'
-      ? { email: DEMO_ADMIN_EMAIL, password: DEMO_PASSWORD }
-      : { email: DEMO_STUDENT_EMAIL, password: DEMO_PASSWORD };
-    setIsLoading(true);
-    try {
-      const { error: signInError } = await supabase.auth.signInWithPassword(creds);
-      if (signInError) throw signInError;
-    } catch (err) {
-      setError("This demo account is not set up yet -- create it once (see supabase/demo-seed.sql), then this button works.");
+    } catch {
+      setError("Sign-in failed. Check your details and try again.");
     } finally {
       setIsLoading(false);
     }
@@ -74,9 +52,9 @@ export default function SignIn() {
         redirectTo: window.location.origin + '/reset-password',
       });
       if (resetError) throw resetError;
-      setNotice("Password reset link sent. Please check your email.");
-    } catch (err) {
-      setError(err.message || "Could not send reset email. Please try again.");
+      setNotice("If an account exists for that email, a reset link will be sent.");
+    } catch {
+      setNotice("If an account exists for that email, a reset link will be sent.");
     }
   }
 
@@ -218,19 +196,6 @@ export default function SignIn() {
               )}
             </button>
           </form>
-
-          <div className="bolt-demo">
-            <div className="bolt-demo-divider"><span>or explore the demo</span></div>
-            <div className="bolt-demo-row">
-              <button type="button" className="bolt-demo-btn" disabled={isLoading} onClick={() => demoLogin('student')}>
-                <GraduationCap size={14} /> Explore as Student
-              </button>
-              <button type="button" className="bolt-demo-btn" disabled={isLoading} onClick={() => demoLogin('admin')}>
-                <Shield size={14} /> Explore as SRC Admin
-              </button>
-            </div>
-            <p className="bolt-demo-note">Pre-loaded demo data, no sign-up needed</p>
-          </div>
 
           <p className="bolt-auth-link">
             No account yet?{" "}

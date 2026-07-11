@@ -3,7 +3,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { supabase } from '../supabaseClient';
+import { getVisibleEvents, getOwnFeedback, toggleEventAttendance, submitEventFeedback, publicError } from '../lib/api';
 import { useProfile, isEventPast } from '../lib/useProfile';
 import StudentLayout from '../components/StudentLayout';
 import { EventRow } from '../components/cards';
@@ -15,7 +15,6 @@ export default function Events() {
   const userId = session?.user?.id || null;
 
   const [events, setEvents] = useState([]);
-  const [attendees, setAttendees] = useState([]);
   const [feedback, setFeedback] = useState([]);
   const [busyId, setBusyId] = useState(null);
   const [error, setError] = useState('');
@@ -30,54 +29,39 @@ export default function Events() {
   const [saving, setSaving] = useState(false);
 
   const loadDynamic = useCallback(async () => {
-    if (!supabase) return;
-    const [attRes, fbRes] = await Promise.all([
-      supabase.from('event_attendees').select('event_id, user_id'),
-      userId ? supabase.from('feedback').select('*').eq('user_id', userId) : Promise.resolve({ data: [] }),
+    const [eventRows, feedbackRows] = await Promise.all([
+      getVisibleEvents(), getOwnFeedback(userId),
     ]);
-    setAttendees(attRes.data || []);
-    setFeedback(fbRes.data || []);
+    setEvents(eventRows || []);
+    setFeedback(feedbackRows || []);
   }, [userId]);
 
   const loadAll = useCallback(async () => {
-    if (!supabase) { setError('Not connected to Supabase.'); setDataLoading(false); return; }
     setDataLoading(true);
     setError('');
-    const { data, error: eErr } = await supabase.from('events').select('*').order('event_date', { ascending: true });
-    if (eErr) setError(eErr.message);
-    else setEvents(data || []);
-    await loadDynamic();
-    setDataLoading(false);
+    try { await loadDynamic(); }
+    catch (e) { setError(publicError(e, 'Could not load events.')); }
+    finally { setDataLoading(false); }
   }, [loadDynamic]);
-
-  useEffect(() => { if (!loading) loadAll(); }, [loading, loadAll]);
 
   useEffect(() => {
-    if (!supabase) return undefined;
-    const ch = supabase
-      .channel('events-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'event_attendees' }, () => loadDynamic())
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
-  }, [loadDynamic]);
+    if (loading) return undefined;
+    const timer = setTimeout(() => { void loadAll(); }, 0);
+    return () => clearTimeout(timer);
+  }, [loading, loadAll]);
 
-  const goingCount = useCallback((eid) => attendees.filter((a) => a.event_id === eid).length, [attendees]);
-  const amGoing = useCallback((eid) => attendees.some((a) => a.event_id === eid && a.user_id === userId), [attendees, userId]);
+
+  const goingCount = useCallback((eid) => Number(events.find((e) => e.id === eid)?.going_count || 0), [events]);
+  const amGoing = useCallback((eid) => !!events.find((e) => e.id === eid)?.i_am_going, [events]);
   const myFeedback = useCallback((eid) => feedback.find((f) => f.event_id === eid) || null, [feedback]);
 
   const toggleAttend = async (eid) => {
-    if (!supabase || !userId) return;
+    if (!userId) return;
     setBusyId(eid);
     setError('');
-    if (amGoing(eid)) {
-      const { error: e } = await supabase.from('event_attendees').delete().eq('event_id', eid).eq('user_id', userId);
-      if (e) setError(e.message);
-    } else {
-      const { error: e } = await supabase.from('event_attendees').insert({ event_id: eid });
-      if (e) setError(e.message);
-    }
-    await loadDynamic();
-    setBusyId(null);
+    try { await toggleEventAttendance(eid); await loadDynamic(); }
+    catch (e) { setError(publicError(e, 'Could not update your RSVP.')); }
+    finally { setBusyId(null); }
   };
 
   const openFeedback = (ev) => {
@@ -89,23 +73,17 @@ export default function Events() {
   };
 
   const submitFeedback = async () => {
-    if (!supabase || !userId || !fbEvent || !rating) return;
+    if (!userId || !fbEvent || !rating || didAttend === null) return;
     setSaving(true);
     setError('');
-    const payload = {
-      event_id: fbEvent.id,
-      user_id: userId,
-      rating,
-      comment: comment.trim() || null,
-      did_attend: didAttend,
-    };
-    const { error: e } = await supabase.from('feedback').upsert(payload, { onConflict: 'event_id,user_id' });
-    setSaving(false);
-    if (e) { setError(e.message); return; }
-    setFbEvent(null);
-    setToast('Thanks for your feedback!');
-    setTimeout(() => setToast(''), 3000);
-    await loadDynamic();
+    try {
+      await submitEventFeedback({ eventId: fbEvent.id, rating, comment: comment.trim(), didAttend });
+      setFbEvent(null);
+      setToast('Thanks for your feedback!');
+      setTimeout(() => setToast(''), 3000);
+      await loadDynamic();
+    } catch (e) { setError(publicError(e, 'Could not submit feedback.')); }
+    finally { setSaving(false); }
   };
 
   const { upcoming, past } = useMemo(() => {
@@ -195,7 +173,7 @@ export default function Events() {
         footer={(
           <>
             <button className="btn btn-ghost" onClick={() => setFbEvent(null)}>Cancel</button>
-            <button className="btn btn-primary" onClick={submitFeedback} disabled={!rating || saving}>
+            <button className="btn btn-primary" onClick={submitFeedback} disabled={!rating || didAttend === null || saving}>
               {saving ? <span className="spinner" /> : null} Submit feedback
             </button>
           </>

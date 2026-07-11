@@ -15,12 +15,12 @@ import { supabase } from '../supabaseClient';
   Returns { loading, session, profile }.
 */
 export function useProfile() {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !!supabase);
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
 
   useEffect(() => {
-    if (!supabase) { setLoading(false); return; }
+    if (!supabase) return;
     let active = true;
 
     const loadProfile = async (sess) => {

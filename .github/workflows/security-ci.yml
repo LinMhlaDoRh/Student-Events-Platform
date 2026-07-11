@@ -1,0 +1,47 @@
+name: Security CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.19.0
+          cache: npm
+      - name: Use project npm version
+        run: npm install --global npm@11.6.0
+      - name: Reproducible install
+        run: npm ci --ignore-scripts
+      - name: Static tests, lint and production build
+        run: npm run verify
+      - name: Dependency vulnerability gate
+        run: npm audit --audit-level=high
+      - name: Secret-pattern gate
+        shell: bash
+        run: |
+          # Split literals so the workflow file itself does not match its own gate.
+          DEMO_CRED="demo""1234"
+          PRIV_KEY="BEGIN ""(RSA|OPENSSH|EC) PRIVATE KEY"
+          GCP_KEY="AIza""[0-9A-Za-z_-]{20,}"
+          SUPA_KEY="SUPABASE_SERVICE_ROLE""_KEY="
+          PATTERN="${DEMO_CRED}|${PRIV_KEY}|${GCP_KEY}|${SUPA_KEY}"
+          if grep -RInE "${PATTERN}" \
+               --exclude-dir=.git \
+               --exclude=package-lock.json \
+               --exclude='security-static.test.js' \
+               --exclude='security-ci.yml' \
+               .; then
+            echo 'Potential secret or shared credential found.' >&2
+            exit 1
+          fi

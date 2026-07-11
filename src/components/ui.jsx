@@ -145,31 +145,31 @@ export function Donut({ segments, size = 132, thickness = 18, center }) {
   const total = segments.reduce((s, x) => s + x.value, 0) || 1;
   const r = (size - thickness) / 2;
   const circ = 2 * Math.PI * r;
-  let offset = 0;
+  const plottedSegments = segments.reduce((acc, seg, index) => {
+    const prevOffset = acc.length ? acc[acc.length - 1].nextOffset : 0;
+    const len = (seg.value / total) * circ;
+    acc.push({ ...seg, index, len, offset: prevOffset, nextOffset: prevOffset + len });
+    return acc;
+  }, []);
   const wrap = { position: 'relative', width: size, height: size, flex: 'none' };
   return (
     <div style={wrap}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#eef2f6" strokeWidth={thickness} />
-        {segments.map((seg, i) => {
-          const len = (seg.value / total) * circ;
-          const el = (
-            <circle
-              key={i}
-              cx={size / 2}
-              cy={size / 2}
-              r={r}
-              fill="none"
-              stroke={seg.color}
-              strokeWidth={thickness}
-              strokeDasharray={`${len} ${circ - len}`}
-              strokeDashoffset={-offset}
-              transform={`rotate(-90 ${size / 2} ${size / 2})`}
-            />
-          );
-          offset += len;
-          return el;
-        })}
+        {plottedSegments.map((seg) => (
+          <circle
+            key={seg.index}
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            fill="none"
+            stroke={seg.color}
+            strokeWidth={thickness}
+            strokeDasharray={`${seg.len} ${circ - seg.len}`}
+            strokeDashoffset={-seg.offset}
+            transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          />
+        ))}
       </svg>
       {center != null ? (
         <div style={ST.donutCenter}>

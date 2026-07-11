@@ -19,40 +19,31 @@ export default function ResetPassword() {
   const [done, setDone] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [ready, setReady] = useState(false);
-  const [checking, setChecking] = useState(true);
+  const [checking, setChecking] = useState(() => !!supabase);
 
   useEffect(() => {
-    if (!supabase) { setChecking(false); return; }
+    if (!supabase) return;
 
-    // The email link drops the user here with a recovery session in the URL.
-    supabase.auth
-      .getSession()
-      .then(({ data: { session } }) => {
-        if (session) setReady(true);
-      })
-      .catch((err) => {
-        console.error('getSession failed:', err);
-      })
-      .finally(() => {
-        setChecking(false);
-      });
+    // Only a PASSWORD_RECOVERY auth event authorizes this page. An ordinary
+    // signed-in session is not sufficient to change a password here.
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'PASSWORD_RECOVERY' || session) {
+      if (event === 'PASSWORD_RECOVERY' && session) {
         setReady(true);
         setChecking(false);
       }
     });
+    const timeout = setTimeout(() => setChecking(false), 2500);
 
-    return () => subscription.unsubscribe();
+    return () => { clearTimeout(timeout); subscription.unsubscribe(); };
   }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
-    if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
+    if (password.length < 12) { setError("Password must be at least 12 characters."); return; }
     if (password !== confirm) { setError("Passwords do not match."); return; }
     if (!supabase) { setError("Authentication is not configured. Please try again later."); return; }
 
@@ -64,8 +55,8 @@ export default function ResetPassword() {
       // Sign out so they log in fresh with the new password.
       await supabase.auth.signOut();
       setTimeout(() => navigate('/signin'), 2500);
-    } catch (err) {
-      setError(err.message || "Could not update password. Please try again.");
+    } catch {
+      setError("Could not update the password. Request a new recovery link and try again.");
     } finally {
       setIsLoading(false);
     }
@@ -154,7 +145,7 @@ export default function ResetPassword() {
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Min. 8 characters"
+                      placeholder="Min. 12 characters"
                       autoComplete="new-password"
                       className="bolt-input"
                     />
