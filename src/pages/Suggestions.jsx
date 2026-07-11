@@ -79,7 +79,6 @@ export default function Suggestions() {
     }
   };
 
-  // Count how many community suggestions share each cluster label per campus.
   const similarCount = useMemo(() => {
     const m = {};
     community.forEach((s) => {

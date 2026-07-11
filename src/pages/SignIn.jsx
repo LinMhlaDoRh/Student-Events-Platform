@@ -1,5 +1,5 @@
 /**
- * Sign-in screen: email/password auth, one-click demo logins, and password reset.
+ * Sign-in screen: email/password auth and password reset.
  */
 
 import React, { useState } from 'react';
@@ -7,6 +7,10 @@ import { Link } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle, ArrowRight, GraduationCap, Shield } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
+const ST = {
+  heroWrap: { flex: 1 },
+  passwordInput: { paddingRight: '2.5rem' },
+};
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -23,7 +27,7 @@ export default function SignIn() {
     if (!email.trim()) { setError("Email address is required."); return; }
     if (!password) { setError("Password is required."); return; }
     if (!supabase) { setError("Authentication is not configured. Please try again later."); return; }
-    
+
     setIsLoading(true);
     try {
       const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -63,7 +67,7 @@ export default function SignIn() {
       {/* Left panel */}
       <div className="bolt-left-panel">
         <div className="bolt-bg-pattern" />
-        
+
         <div className="bolt-logo-header">
           <div className="bolt-logo-icon">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -73,7 +77,7 @@ export default function SignIn() {
           <span className="bolt-logo-text">Richfield Events</span>
         </div>
 
-        <div style={{ position: 'relative' }}>
+        <div style={ST.heroWrap}>
           <div className="bolt-hero-text">
             <h1>
               Students propose.<br />
@@ -103,7 +107,7 @@ export default function SignIn() {
           </div>
         </div>
 
-        <a className="bolt-credit" href="https://github.com/LinMhlaDoRh" target="_blank" rel="noreferrer"><svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.950-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .271.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path></svg> Built by LinMhlaDoRh</a>
+        <a className="bolt-credit" href="https://github.com/LinMhlaDoRh" target="_blank" rel="noreferrer"><svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path></svg> Built by LinMhlaDoRh</a>
       </div>
 
       {/* Right form panel */}
@@ -172,7 +176,7 @@ export default function SignIn() {
                   placeholder="Your password"
                   autoComplete="current-password"
                   className="bolt-input"
-                  style={{ paddingRight: '2.5rem' }}
+                  style={ST.passwordInput}
                 />
                 <button
                   type="button"
@@ -192,16 +196,13 @@ export default function SignIn() {
               {isLoading ? (
                 <div className="bolt-spinner" />
               ) : (
-                <>Sign in <ArrowRight size={14} /></>
+                <><ArrowRight size={15} /> Sign In</>
               )}
             </button>
           </form>
 
-          <p className="bolt-auth-link">
-            No account yet?{" "}
-            <Link to="/signup">
-              Create one
-            </Link>
+          <p className="bolt-switch-auth">
+            Don&apos;t have an account? <Link to="/signup">Sign up</Link>
           </p>
         </div>
       </div>

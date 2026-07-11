@@ -1,5 +1,0 @@
--- Retired security-sensitive phase script: phase2-anonymous.sql
--- New projects: run supabase/fresh-install.sql, then the comprehensive migration.
--- Existing projects: run supabase/migrations/20260711133000_comprehensive_security_remediation.sql.
--- The previous contents were removed because running an old phase independently
--- could recreate permissive policies or bypass the current security model.

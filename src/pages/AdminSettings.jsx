@@ -10,11 +10,9 @@ import { prettyCampus, initials } from '../lib/format';
 import { InfoIcon, MapPinIcon } from '../components/icons';
 
 /*
-  Settings.
-  FLAG: the current system has no settings/config table, so there are no
-  persisted, editable platform settings to expose. We show the signed-in admin
-  account and read-only platform facts rather than fabricating toggles that
-  wouldn't save anywhere.
+  There is no settings/config table in v1, so this page surfaces the
+  signed-in admin's account details and read-only platform facts.
+  Editable, database-backed settings are a planned enhancement.
 */
 export default function AdminSettings() {
   const { loading, profile } = useProfile();

@@ -6,8 +6,7 @@ import React from 'react';
 import { prettyScope, fmtDateTime, CATEGORY_LABELS, titleize } from '../lib/format';
 import { CalendarIcon, UsersIcon, HeartIcon, CheckIcon } from './icons';
 
-/* Reminder: never use inline `style={x}` double braces — use classes or these
-   hoisted single-brace style constants. */
+// Style objects are hoisted so JSX receives a single-brace reference; see ui.jsx for context.
 const descStyle = {
   fontSize: 13, color: 'var(--muted)', margin: '8px 0 0', lineHeight: 1.5,
   display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',

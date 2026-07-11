@@ -11,11 +11,10 @@ import { prettyCampus, fmtDate, initials } from '../lib/format';
 import { UsersIcon, InfoIcon } from '../components/icons';
 
 /*
-  Students roster.
-  FLAG: the `users` table currently has own-profile-only RLS, so a non-elevated
-  admin client typically cannot read other students' rows. We query honestly and
-  render whatever the policy returns — no fabricated roster. If only the admin's
-  own row comes back, we surface a clear notice rather than inventing data.
+  The `users` table uses own-profile-only RLS by default, so the admin client
+  receives only the rows the policy allows. The page renders whatever comes back
+  and surfaces a clear notice when the roster is restricted, rather than
+  fabricating data. An admin read policy on the users table unlocks the full list.
 */
 export default function AdminStudents() {
   const { loading, profile } = useProfile();

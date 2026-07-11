@@ -109,7 +109,7 @@ function App() {
   // This stops a logged-in admin from briefly seeing the student dashboard
   // while their role is still loading after sign-in.
   if (loading || (session && role === null)) {
-    return null; // Or a loading spinner
+    return null;
   }
 
   const homePath = role === 'admin' ? '/admin' : '/dashboard';

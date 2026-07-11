@@ -5,11 +5,9 @@
 import React, { useEffect } from 'react';
 import { XIcon } from './icons';
 
-/*
-  Shared UI primitives. IMPORTANT: never use inline `style= ... ` double
-  braces in this codebase — the build pipeline mangles them. Use CSS classes
-  (see theme.css) or module-level style constants referenced with single braces.
-*/
+// Inline style objects are hoisted as module-level constants (ST below) so that
+// JSX only ever receives a single-brace reference. Vite's JSX transform can
+// misread a double-brace literal as a template expression and mangle the value.
 
 const ST = {
   loaderInline: { display: 'flex', alignItems: 'center', gap: 10, color: 'var(--muted)', fontSize: 14, padding: 24 },

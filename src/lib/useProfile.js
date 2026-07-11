@@ -1,19 +1,17 @@
 /**
- * Hook that loads the signed-in user's profile and role from the public.users table.
+ * Loads the signed-in user's session and profile from the public.users table.
+ *
+ * Role and campus are read from the trusted server-side row. If the row is
+ * absent (e.g. during the brief window after signup), auth user_metadata
+ * provides a fallback for name and campus only — role always defaults to
+ * 'student' when no database record exists.
+ *
+ * Returns { loading, session, profile }.
  */
 
 import { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 
-/*
-  useProfile()
-  Loads the current auth session and the signed-in user's profile.
-  - Reads the trusted public.users row (id, full_name, email, campus, role).
-  - Falls back to auth user_metadata for name/campus if the row is missing,
-    and defaults role to 'student'. Never trusts client metadata for role
-    when a users row exists.
-  Returns { loading, session, profile }.
-*/
 export function useProfile() {
   const [loading, setLoading] = useState(() => !!supabase);
   const [session, setSession] = useState(null);

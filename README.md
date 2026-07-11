@@ -4,7 +4,7 @@ A React + Supabase platform where students propose events, vote on active ideas,
 
 ## Security model
 
-The browser is untrusted. Sensitive writes use narrow Postgres functions, and Row Level Security is the authorization boundary. New users are always students; roles and campuses cannot be changed through the public API. Shared demo accounts have been removed. Users must create and verify their own account.
+The browser is untrusted. Sensitive writes use narrow Postgres functions, and Row Level Security is the authorization boundary. New users are always students; roles and campuses cannot be changed through the public API. Users must create and verify their own account.
 
 Anonymous suggestions are displayed to students and SRC reviewers without author identity. The owner mapping remains in the protected base table only to enforce one submission per round and permit a safe withdrawal.
 
@@ -21,8 +21,8 @@ Anonymous suggestions are displayed to students and SRC reviewers without author
 1. `npm ci`
 2. Copy `.env.example` to `.env` and set the public Supabase URL and anon key.
 3. For a new database, run `supabase/fresh-install.sql`, followed immediately by `supabase/migrations/20260711133000_comprehensive_security_remediation.sql`.
-4. For the existing database, run only the comprehensive migration.
-5. Apply every item in `SUPABASE_DASHBOARD_SECURITY_CHECKLIST.md`.
+4. For an existing database, back up first and run only the comprehensive migration.
+5. Apply every item in `docs/supabase-setup.md`.
 6. Deploy the Edge Function using `supabase/AI_SETUP.md`.
 7. Run `npm run verify`.
 8. Start locally with `npm run dev`.
@@ -47,4 +47,15 @@ The application cannot promote users. Promote administrators only through the Su
 - CSP and browser security headers
 - Exact dependency versions and GitHub security CI
 
-See `SECURITY.md`, `TESTING_GUIDE.md`, and `SECURITY_REMEDIATION_REPORT.md` for details.
+## Release gate
+
+Do not deploy unless:
+
+- GitHub Security CI passes
+- Database regression assertions pass (`supabase/tests/security_regression.sql`)
+- Student and admin negative authorization tests pass in staging
+- Both administrators use named accounts with TOTP enabled
+- Email confirmation, CAPTCHA, leaked-password protection and safe redirects are enabled
+- The production build contains no source maps or shared credentials
+
+See `SECURITY.md` and `TESTING_GUIDE.md` for details.
