@@ -1,58 +1,36 @@
-# Changes
+# Security remediation changes
 
-This pass was a security and clean-up review. The headline items are the two
-privilege-escalation fixes and filling in the database scripts that the repo was
-missing.
+## Critical and high-risk fixes
 
-## Security fixes
+- Removed public student/admin demo credentials and one-click demo login.
+- Migration deletes the known shared demo accounts and synthetic ghost accounts with known password hashes.
+- Replaced direct suggestion writes with a server-controlled, rate-limited function.
+- Added active suggestion rounds and transaction locking for one submission per user per round.
+- Removed clustered-suggestion base-table exposure; community and admin reads omit author IDs.
+- Replaced raw public vote/attendance reads with owner-only rows and aggregate RPC results.
+- Added state/campus checks for voting and RSVP.
+- Added bounded post-event feedback with a 30-day window and walk-in support.
 
-- **Signup no longer trusts the role from the client.** `handle_new_user()` in
-  `phase1-auth.sql` used to copy `role` out of the signup metadata
-  (`raw_user_meta_data ->> 'role'`). Since `auth.signUp()` runs in the browser
-  with the public anon key, anyone could have signed up as an admin. The trigger
-  now hardcodes `role = 'student'` and uses `on conflict (id) do nothing` so a
-  re-fired trigger can't reset an existing profile.
-- **Users can no longer change their own role.** Added the
-  `prevent_role_change()` function and the `users_no_self_role_change` trigger.
-  Previously the "update own profile" policy let a student promote themselves
-  with a single update. This trigger was referenced by the README and
-  `demo-seed.sql` but was never actually defined anywhere in the repo - so on a
-  fresh database the demo seed would have errored. It exists now.
-- **Hardened the helper functions.** `is_admin()` (and the new `my_campus()`) use
-  `security definer set search_path = ''` with fully-qualified table names.
-- **Tightened the suggestions read policy.** Students see their own suggestions
-  plus any that have been clustered - not the whole table.
-- **Removed a secret footgun from `.env.example`.** It listed `VITE_GEMINI_KEY`,
-  which would have leaked the AI key into the public browser bundle. The Gemini
-  key belongs server-side as an Edge Function secret; the file now says so.
+## Authentication and administration
 
-## Missing database scripts added
+- New users are always students.
+- Security-sensitive profile columns are immutable through the API.
+- Administrator count is limited to two and one per campus; there is no promotion endpoint.
+- Password minimum increased to 12 characters.
+- Recovery page now requires a real `PASSWORD_RECOVERY` event.
+- Added required Supabase dashboard hardening checklist.
 
-The app and `demo-seed.sql` referenced tables that no SQL file in the repo
-created. Anyone cloning the project couldn't stand it up. Added:
+## AI, privacy and abuse resistance
 
-- `phase2-suggestions.sql` - the base suggestions table and its policies
-- `phase4-voting.sql` - votes
-- `phase5-events.sql` - events and RSVPs, plus the `my_campus()` helper
-- `phase6-feedback.sql` - post-event feedback
+- Added administrator AI run claims, two-per-hour limit, single-run lock and stale-lock recovery.
+- Added request timeout, bounded input, strict origin handling, prompt-data separation and exact output validation.
+- Sanitized provider errors and logs.
+- Added general database rate limiting and immutable security audit logging.
 
-All include their RLS policies, grants, and realtime publication setup, and are
-ordered so the suggestions table exists before `phase2-anonymous.sql` and
-`phase3-ai.sql` add columns to it.
+## Deployment and supply chain
 
-## For an existing (already-deployed) database
-
-- Added `security-hardening.sql`: an idempotent script that applies just the
-  security fixes above to a live database without recreating tables or touching
-  data. This is what to run on the current demo project.
-
-## Housekeeping
-
-- Pinned every dependency in `package.json` to a real version. They were all set
-  to `"latest"`, which means two installs on different days could pull different
-  (possibly breaking) versions. Pinned to the versions already in
-  `package-lock.json`.
-- Fixed stale "Gemini 1.5 Flash" references in the docs and the Edge Function
-  comment; the code defaults to a current Gemini Flash model.
-- Rewrote `README.md` and added `SECURITY.md`.
-- Set a proper page `<title>` and description in `index.html`.
+- Added CSP and browser security headers.
+- Disabled production source maps.
+- Pinned exact dependency versions and synchronized lock root metadata.
+- Added Node/npm engine requirements, static security tests and GitHub Security CI.
+- Retired insecure phase scripts in favor of one fresh schema and one authoritative migration.

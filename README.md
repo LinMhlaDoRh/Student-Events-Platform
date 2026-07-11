@@ -1,133 +1,50 @@
 # Richfield Student Events Platform
 
-A web app that lets Richfield students propose the events they actually want, vote
-on each other's ideas, and RSVP once the SRC turns the popular ones into real
-events. It covers the Musgrave and uMhlanga campuses.
+A React + Supabase platform where students propose events, vote on active ideas, RSVP to campus-eligible events, and provide post-event feedback. Two SRC administrators—one per campus—review demand and manage events.
 
-The idea started from a simple observation: attendance was low not because
-students didn't want events, but because nobody was asking them what to run. So
-the flow here is deliberately bottom-up - students suggest, the crowd signals
-demand, and admins act on the signal instead of guessing.
+## Security model
 
-- Live demo: https://student-events-platform.vercel.app
-- Source: https://github.com/LinMhlaDoRh/Student-Events-Platform
+The browser is untrusted. Sensitive writes use narrow Postgres functions, and Row Level Security is the authorization boundary. New users are always students; roles and campuses cannot be changed through the public API. Shared demo accounts have been removed. Users must create and verify their own account.
 
-## How it works
+Anonymous suggestions are displayed to students and SRC reviewers without author identity. The owner mapping remains in the protected base table only to enforce one submission per round and permit a safe withdrawal.
 
-There are two roles.
+## Requirements
 
-**Students** can:
-- submit a suggestion for their campus (optionally anonymously),
-- browse the community board once suggestions have been grouped into themes,
-- vote "I'm interested" on themes they'd show up for,
-- RSVP to confirmed events and leave a rating afterwards.
+- Node.js 22.19.x
+- npm 11.6.x
+- A Supabase project
+- Vercel or another static host
+- Optional Gemini key for administrator-assisted clustering
 
-**Admins** (the SRC) can:
-- see every raw suggestion and the interest behind each theme,
-- group related suggestions into a labelled cluster (there's an AI-assisted
-  "Analyse Suggestions" button that does a first pass, which the admin then edits),
-- promote a theme into a real event, set its campus scope and date,
-- and read post-event feedback.
+## Local setup
 
-Raw suggestions from other students stay private until an admin has clustered
-them. That keeps the public board tidy and stops it turning into an unmoderated
-feed.
+1. `npm ci`
+2. Copy `.env.example` to `.env` and set the public Supabase URL and anon key.
+3. For a new database, run `supabase/fresh-install.sql`, followed immediately by `supabase/migrations/20260711133000_comprehensive_security_remediation.sql`.
+4. For the existing database, run only the comprehensive migration.
+5. Apply every item in `SUPABASE_DASHBOARD_SECURITY_CHECKLIST.md`.
+6. Deploy the Edge Function using `supabase/AI_SETUP.md`.
+7. Run `npm run verify`.
+8. Start locally with `npm run dev`.
 
-## Tech
+## Administrator setup
 
-- React + Vite on the front end, deployed on Vercel.
-- Supabase for auth, Postgres, Row Level Security, and realtime.
-- A single Supabase Edge Function that calls Google Gemini to do the suggestion
-  clustering. The AI key never touches the browser - see below.
+The application cannot promote users. Promote administrators only through the Supabase SQL editor while signed in as the project owner. The database allows at most two administrators and rejects a second administrator for the same campus. Review the current administrator list before promotion.
 
-## Running it locally
+## Synthetic portfolio data
 
-You'll need Node 18+ and a Supabase project.
+`supabase/demo-seed.sql` adds non-destructive synthetic content only after real verified accounts exist. It never creates accounts, exposes passwords, changes roles, or wipes existing data. Do not publish shared credentials.
 
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
-2. Copy the environment template and fill in your Supabase project values:
-   ```bash
-   cp .env.example .env
-   ```
-   Only `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` go in `.env`. Both are
-   public by design; access is controlled by Row Level Security, not by hiding
-   the anon key.
-3. Set up the database (next section).
-4. Start the dev server:
-   ```bash
-   npm run dev
-   ```
+## Main security controls
 
-## Database setup
+- One suggestion per user per active round, enforced transactionally
+- Server-derived suggestion owner, campus, status, round and timestamps
+- Lifecycle-aware voting, RSVP, feedback and withdrawal operations
+- Private voter and attendee identities with aggregate public counts
+- Thirty-day feedback window for campus-visible past events, including walk-in attendees
+- AI administrator authorization, rate limits, concurrency lock, timeout and strict output validation
+- Immutable security audit log for administrator changes
+- CSP and browser security headers
+- Exact dependency versions and GitHub security CI
 
-Run these in the Supabase SQL editor, in order. They're split by phase so each
-step is easy to read and re-run; every file is safe to run more than once.
-
-1. `supabase/phase1-auth.sql` - profile table, auth trigger, and role protection
-2. `supabase/phase2-suggestions.sql` - suggestions table and its policies
-3. `supabase/phase2-admin-read.sql` - lets admins read the full roster
-4. `supabase/phase2-anonymous.sql` - adds the optional anonymous flag
-5. `supabase/phase3-ai.sql` - adds the AI category column
-6. `supabase/phase4-voting.sql` - votes
-7. `supabase/phase5-events.sql` - events and RSVPs
-8. `supabase/phase6-feedback.sql` - post-event feedback
-
-The suggestions table has to exist before the anonymous and AI columns get added
-to it, which is why phase2-suggestions comes before those two.
-
-Optional:
-- `supabase/demo-seed.sql` populates two demo accounts and sample data for a
-  walkthrough. Don't run it against real data - it wipes the content tables first.
-- `supabase/security-hardening.sql` is only for a database that was built from an
-  earlier version of these scripts. A fresh setup already includes everything in
-  it. See SECURITY.md for what it does and why.
-
-### Creating your first admin
-
-New accounts are always created as students - that's a security decision, not an
-oversight (see SECURITY.md). To make yourself an admin, run this once in the SQL
-editor, which briefly lifts the role-change guard for a single update:
-
-```sql
-alter table public.users disable trigger users_no_self_role_change;
-update public.users set role = 'admin' where email = 'you@richfield.ac.za';
-alter table public.users enable trigger users_no_self_role_change;
-```
-
-Then sign out and back in so the app reloads your role.
-
-## AI clustering
-
-The "Analyse Suggestions" button calls a Supabase Edge Function
-(`supabase/functions/cluster-suggestions`) which batches the un-clustered
-suggestions into one Gemini call and returns suggested groupings. The function
-verifies the caller is a signed-in admin before doing anything, and the Gemini
-key is stored as a server-side Edge Function secret. Full setup is in
-`supabase/AI_SETUP.md`.
-
-## Project layout
-
-```
-src/
-  pages/            student and admin pages (routed in App.jsx)
-  components/        shared UI, cards, icons
-  lib/               useProfile hook and helpers
-  supabaseClient.js  the configured Supabase client
-supabase/
-  phase*.sql         database schema, one file per phase
-  security-hardening.sql   apply security fixes to an older database
-  demo-seed.sql      optional demo data
-  functions/         the cluster-suggestions Edge Function
-  AI_SETUP.md        how to deploy the Edge Function and set the Gemini secret
-```
-
-Other docs worth reading: `SECURITY.md` for the security model, `BUILD_GUIDE.md`
-for how the project was built phase by phase, and `TESTING_GUIDE.md` /
-`MANUAL_TESTS.md` for the test checklist.
-
-## Author
-
-Built by Linda (https://github.com/LinMhlaDoRh) as a Richfield project.
+See `SECURITY.md`, `TESTING_GUIDE.md`, and `SECURITY_REMEDIATION_REPORT.md` for details.

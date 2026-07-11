@@ -38,7 +38,11 @@ export default function Profile() {
     setDataLoading(false);
   }, [userId]);
 
-  useEffect(() => { if (!loading) load(); }, [loading, load]);
+  useEffect(() => {
+    if (loading) return undefined;
+    const timer = setTimeout(() => { void load(); }, 0);
+    return () => clearTimeout(timer);
+  }, [loading, load]);
 
   if (loading || dataLoading) {
     return <StudentLayout profile={profile}><Loader full /></StudentLayout>;

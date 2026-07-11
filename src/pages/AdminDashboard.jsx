@@ -5,6 +5,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import { getAdminSuggestions, publicError } from '../lib/api';
 import { useProfile, isEventPast } from '../lib/useProfile';
 import AdminLayout from '../components/AdminLayout';
 import { Loader, StatCard, EmptyState, ErrorBanner } from '../components/ui';
@@ -27,24 +28,23 @@ export default function AdminDashboard() {
     if (!supabase) { setError('Not connected to Supabase.'); setDataLoading(false); return; }
     setDataLoading(true);
     setError('');
-    // Suggestions may not have the optional `category` column yet (added in a
-    // later AI phase). Try with it, then fall back so the dashboard never breaks.
-    let sRes = await supabase.from('suggestions').select('id, text, campus, cluster_label, status, category');
-    if (sRes.error && /category/i.test(sRes.error.message || '')) {
-      sRes = await supabase.from('suggestions').select('id, text, campus, cluster_label, status');
-    }
+    let suggestionRows = [];
+    try { suggestionRows = await getAdminSuggestions(); } catch (e) { setError(publicError(e, 'Could not load suggestions.')); }
     const [vRes, eRes] = await Promise.all([
-      supabase.from('votes').select('suggestion_id, vote_type'),
+      supabase.from('votes').select('suggestion_id, vote_type').limit(2000),
       supabase.from('events').select('id, status, event_date, campus_scope, category'),
     ]);
-    if (sRes.error) setError(sRes.error.message);
-    setSuggestions(sRes.data || []);
+    setSuggestions(suggestionRows || []);
     setVotes(vRes.data || []);
     setEvents(eRes.data || []);
     setDataLoading(false);
   }, []);
 
-  useEffect(() => { if (!loading) load(); }, [loading, load]);
+  useEffect(() => {
+    if (loading) return undefined;
+    const timer = setTimeout(() => { void load(); }, 0);
+    return () => clearTimeout(timer);
+  }, [loading, load]);
 
   const interestedFor = useCallback(
     (sid) => votes.filter((v) => v.suggestion_id === sid && v.vote_type === 'interested').length,

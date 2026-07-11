@@ -57,13 +57,10 @@ const AdminRoute = ({ session, role, children }) => {
 function App() {
   const [session, setSession] = useState(null);
   const [role, setRole] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !!supabase);
 
   useEffect(() => {
-    if (!supabase) {
-      setLoading(false);
-      return;
-    }
+    if (!supabase) return;
 
     let active = true;
 
@@ -202,6 +199,7 @@ function App() {
             </AdminRoute>
           }
         />
+        <Route path="*" element={<Navigate to={session ? homePath : '/signin'} replace />} />
       </Routes>
       <Analytics />
       <SpeedInsights />

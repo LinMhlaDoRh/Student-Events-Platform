@@ -30,6 +30,7 @@ export default function SignUp() {
   const [campus, setCampus] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const strength = password ? getPasswordStrength(password) : null;
@@ -37,9 +38,10 @@ export default function SignUp() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    setNotice("");
     if (!fullName.trim()) { setError("Full name is required."); return; }
     if (!email.trim()) { setError("Email address is required."); return; }
-    if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
+    if (password.length < 12) { setError("Password must be at least 12 characters."); return; }
     if (!campus) { setError("Please select your campus."); return; }
     if (!supabase) { setError("Authentication is not configured. Please try again later."); return; }
 
@@ -63,7 +65,7 @@ export default function SignUp() {
       if (data.session) {
         navigate('/dashboard');
       } else {
-        setError("Account created! Please check your email to verify.");
+        setNotice("Account created. Check your email to verify it before signing in.");
       }
     } catch (err) {
       setError(err.message || "Sign up failed. Please try again.");
@@ -142,6 +144,7 @@ export default function SignUp() {
               {error}
             </div>
           )}
+          {notice && <div className="bolt-success">{notice}</div>}
 
           <form onSubmit={handleSubmit} className="bolt-form">
             <div className="bolt-field">
@@ -182,7 +185,7 @@ export default function SignUp() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Min. 8 characters"
+                  placeholder="Min. 12 characters"
                   autoComplete="new-password"
                   className="bolt-input"
                   style={{ paddingRight: '2.5rem' }}

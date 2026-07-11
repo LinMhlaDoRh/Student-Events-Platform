@@ -1,44 +1,36 @@
 # AI clustering setup
 
-This wires the admin "Analyse Suggestions" button to Google Gemini through a
-Supabase Edge Function. The function reads the un-clustered suggestions, sends
-them to Gemini in one batched call, and returns suggested groupings that the
-admin can accept or edit.
+The clustering function is optional and administrator-only. Manual labels remain available if Gemini is disabled.
 
-The key design point: the Gemini API key stays on the server. It's an Edge
-Function secret, never a frontend variable, so it can't leak into the browser
-bundle. The function also checks that the caller is a signed-in admin before it
-does anything, so a student can't trigger paid AI calls.
+## Secrets
 
-## What you need
+Set Edge Function secrets:
 
-- The Supabase CLI, logged in and linked to your project.
-- A Google AI Studio API key for Gemini.
+```bash
+supabase secrets set GEMINI_API_KEY=<your-restricted-key>
+supabase secrets set GEMINI_MODEL=gemini-2.0-flash
+supabase secrets set APP_ORIGINS=https://student-events-platform.vercel.app,http://localhost:5173
+```
 
-## Steps
+`SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` are injected by Supabase. Never put Gemini or service-role credentials in a `VITE_` variable.
 
-1. Set the secrets on your project:
-   ```bash
-   supabase secrets set GEMINI_API_KEY=your_key_here
-   supabase secrets set GEMINI_MODEL=gemini-2.0-flash   # optional; this is the default
-   ```
-   Gemini's Flash models are a good fit here - they're fast, cheap, and more than
-   capable of grouping short text. If Google renames or retires the default,
-   point `GEMINI_MODEL` at a current Flash model without changing any code.
+## Deploy
 
-2. Deploy the function:
-   ```bash
-   supabase functions deploy cluster-suggestions
-   ```
+```bash
+supabase functions deploy cluster-suggestions
+```
 
-3. In the app, sign in as an admin, open the Suggestions page, and use
-   "Analyse Suggestions". Review the groupings before saving - the AI does a
-   first pass, the admin makes the call.
+The function requires the comprehensive SQL migration because it claims and finishes analysis runs through protected database functions.
 
-## Notes
+## Security behavior
 
-- If the button returns an error, check the function logs
-  (`supabase functions logs cluster-suggestions`). The usual causes are a missing
-  `GEMINI_API_KEY` secret or an out-of-date model name.
-- The function verifies the caller's admin role server-side, so it's safe to have
-  the button visible only to admins in the UI and still trust the backend check.
+- Only an authenticated database-backed administrator can claim a run.
+- Two runs per administrator per hour are allowed.
+- Only one run can execute at a time; stale locks expire after five minutes.
+- At most 200 suggestions and 30,000 input characters are sent per run.
+- Gemini receives delimited untrusted data and a zero-temperature JSON request.
+- Every output ID and field is validated before a write.
+- Provider details are not returned to the browser or written to ordinary logs.
+- Requests time out after 20 seconds.
+
+Student suggestion text is sent to Google. Publish an accurate privacy notice and do not use the AI feature for sensitive personal information.

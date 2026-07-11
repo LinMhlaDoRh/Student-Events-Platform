@@ -3,7 +3,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { supabase } from '../supabaseClient';
+import { getMySuggestions, getCommunitySuggestions, submitSuggestion, withdrawSuggestion, publicError } from '../lib/api';
 import { useProfile } from '../lib/useProfile';
 import StudentLayout from '../components/StudentLayout';
 import { Loader, EmptyState, ErrorBanner, Switch, Badge, Toast } from '../components/ui';
@@ -11,8 +11,6 @@ import { prettyCampus, fmtDate, SUGGESTION_STATUS } from '../lib/format';
 import { SendIcon, InfoIcon, LightbulbIcon, TrashIcon, MapPinIcon, SparkleIcon } from '../components/icons';
 
 const MAX = 280;
-/* One OPEN suggestion per student at a time. A new slot frees up once their idea is decided (approved or rejected). */
-const ONE_PER_ROUND = true;
 const CAMPUSES = ['musgrave', 'umhlanga'];
 
 export default function Suggestions() {
@@ -29,61 +27,56 @@ export default function Suggestions() {
   const [dataLoading, setDataLoading] = useState(true);
 
   const load = useCallback(async () => {
-    if (!supabase) { setDataLoading(false); return; }
     setDataLoading(true);
-    const [mineRes, commRes] = await Promise.all([
-      userId
-        ? supabase.from('suggestions').select('*').eq('submitted_by', userId).order('created_at', { ascending: false })
-        : Promise.resolve({ data: [] }),
-      supabase.from('suggestions').select('id, text, campus, cluster_label, status').not('cluster_label', 'is', null),
-    ]);
-    setMine(mineRes.data || []);
-    setCommunity(commRes.data || []);
-    setDataLoading(false);
+    setError('');
+    try {
+      const [ownRows, communityRows] = await Promise.all([
+        getMySuggestions(userId),
+        getCommunitySuggestions(),
+      ]);
+      setMine(ownRows || []);
+      setCommunity(communityRows || []);
+    } catch (e) {
+      setError(publicError(e, 'Could not load suggestions.'));
+    } finally {
+      setDataLoading(false);
+    }
   }, [userId]);
 
-  useEffect(() => { if (!loading) load(); }, [loading, load]);
+  useEffect(() => {
+    if (loading) return undefined;
+    const timer = setTimeout(() => { void load(); }, 0);
+    return () => clearTimeout(timer);
+  }, [loading, load]);
 
   const submit = async (e) => {
     e.preventDefault();
     if (!idea.trim() || submitting) return;
-    if (!supabase) { setError('Not connected to the server.'); return; }
-    if (ONE_PER_ROUND && mine.some((s) => s.status !== 'approved' && s.status !== 'rejected')) {
-      setError("You already have an idea in review. You can suggest again once it's been approved or rejected.");
-      return;
-    }
     setSubmitting(true);
     setError('');
-    const campusRaw = (profile?.campus || '').toLowerCase();
-    // Persist the anonymity choice. If the optional `anonymous` column has not
-    // been added to the database yet, fall back to inserting without it so
-    // submissions keep working either way.
-    let { data, error: insErr } = await supabase
-      .from('suggestions')
-      .insert({ text: idea.trim(), campus: campusRaw, anonymous })
-      .select()
-      .single();
-    if (insErr && /anonymous/i.test(insErr.message || '')) {
-      ({ data, error: insErr } = await supabase
-        .from('suggestions')
-        .insert({ text: idea.trim(), campus: campusRaw })
-        .select()
-        .single());
+    try {
+      const data = await submitSuggestion(idea.trim(), anonymous);
+      setMine((prev) => [data, ...prev]);
+      setIdea('');
+      setToast(true);
+      setTimeout(() => setToast(false), 3000);
+    } catch (e) {
+      setError(publicError(e, 'Could not submit the suggestion.'));
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
-    if (insErr) { setError(insErr.message || 'Could not submit. Please try again.'); return; }
-    setMine((prev) => [data, ...prev]);
-    setIdea('');
-    setToast(true);
-    setTimeout(() => setToast(false), 3000);
   };
 
   const withdraw = async (id) => {
-    if (!supabase) return;
     const prev = mine;
-    setMine((m) => m.filter((s) => s.id !== id));
-    const { error: delErr } = await supabase.from('suggestions').delete().eq('id', id);
-    if (delErr) { setMine(prev); setError(delErr.message); }
+    setMine((rows) => rows.filter((row) => row.id !== id));
+    setError('');
+    try {
+      await withdrawSuggestion(id);
+    } catch (e) {
+      setMine(prev);
+      setError(publicError(e, 'Could not withdraw this suggestion.'));
+    }
   };
 
   // Count how many community suggestions share each cluster label per campus.
@@ -103,7 +96,7 @@ export default function Suggestions() {
   }
 
   const campus = prettyCampus(profile?.campus);
-  const alreadySubmitted = ONE_PER_ROUND && mine.some((s) => s.status !== 'approved' && s.status !== 'rejected');
+  const alreadySubmitted = mine.length > 0;
   const overLimit = idea.length > MAX - 30;
 
   return (
@@ -138,7 +131,7 @@ export default function Suggestions() {
             <div style={switchRow}>
               <Switch checked={anonymous} onChange={setAnonymous} label="Submit anonymously" />
             </div>
-            <p className="page-sub" style={hintText}>Other students never see your name. Submit anonymously and the SRC sees this idea marked &ldquo;Anonymous&rdquo; too.</p>
+            <p className="page-sub" style={hintText}>Anonymous suggestions are shown without your identity to other students and SRC reviewers. The database keeps ownership private only to enforce one submission per round and withdrawals.</p>
 
             <div style={actionsRow}>
               <button className="btn btn-primary" onClick={submit} disabled={!idea.trim() || submitting || alreadySubmitted}>
@@ -150,7 +143,7 @@ export default function Suggestions() {
             {alreadySubmitted ? (
               <div className="notice notice-blue" style={noticeTop}>
                 <InfoIcon size={16} />
-                <span>You&apos;ve already shared an idea. You can suggest again once it&apos;s been approved or rejected. Track its status under &ldquo;Your submissions&rdquo;.</span>
+                <span>You&apos;ve already shared an idea in the current round. A new slot opens when the SRC starts the next round. Track its status under &ldquo;Your submissions&rdquo;.</span>
               </div>
             ) : null}
           </div>

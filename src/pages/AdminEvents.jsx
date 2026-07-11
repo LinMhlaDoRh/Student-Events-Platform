@@ -2,8 +2,9 @@
  * SRC admin events: create and manage scheduled events.
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
+import { getAdminSuggestions, publicError } from '../lib/api';
 import { useProfile } from '../lib/useProfile';
 import AdminLayout from '../components/AdminLayout';
 import { Loader, EmptyState, ErrorBanner, Modal, Badge } from '../components/ui';
@@ -32,21 +33,25 @@ export default function AdminEvents() {
     if (!supabase) { setError('Not connected to Supabase.'); setDataLoading(false); return; }
     setDataLoading(true);
     setError('');
-    const [eRes, aRes, fRes, iRes] = await Promise.all([
-      supabase.from('events').select('*').order('event_date', { ascending: false }),
-      supabase.from('event_attendees').select('event_id'),
-      supabase.from('feedback').select('event_id, rating, did_attend'),
-      supabase.from('suggestions').select('id, text, campus, cluster_label').not('cluster_label', 'is', null),
+    const [eRes, aRes, fRes, ideaRows] = await Promise.all([
+      supabase.from('events').select('*').order('event_date', { ascending: false }).limit(500),
+      supabase.from('event_attendees').select('event_id').limit(2000),
+      supabase.from('feedback').select('event_id, rating, did_attend').limit(500),
+      getAdminSuggestions(),
     ]);
     if (eRes.error) setError(eRes.error.message);
     setEvents(eRes.data || []);
     setAttendees(aRes.data || []);
     setFeedback(fRes.data || []);
-    setIdeas(iRes.data || []);
+    setIdeas((ideaRows || []).filter((row) => row.cluster_label));
     setDataLoading(false);
   }, []);
 
-  useEffect(() => { if (!loading) load(); }, [loading, load]);
+  useEffect(() => {
+    if (loading) return undefined;
+    const timer = setTimeout(() => { void load(); }, 0);
+    return () => clearTimeout(timer);
+  }, [loading, load]);
 
   const goingCount = useCallback((eid) => attendees.filter((a) => a.event_id === eid).length, [attendees]);
   const fbSummary = useCallback((eid) => {
@@ -96,10 +101,10 @@ export default function AdminEvents() {
 
   const deleteEvent = async (id) => {
     if (!supabase) return;
-    const prev = events;
-    setEvents((e) => e.filter((x) => x.id !== id));
-    const { error: e } = await supabase.from('events').delete().eq('id', id);
-    if (e) { setError(e.message); setEvents(prev); }
+    setError('');
+    const { error: updateError } = await supabase.from('events').update({ status: 'cancelled' }).eq('id', id);
+    if (updateError) setError(publicError(updateError, 'Could not cancel the event.'));
+    else setEvents((rows) => rows.map((row) => (row.id === id ? { ...row, status: 'cancelled' } : row)));
   };
 
   const valid = form.title.trim() && form.event_date;
@@ -159,7 +164,7 @@ export default function AdminEvents() {
                         {STATUSES.map((s) => <option key={s} value={s}>{titleize(s)}</option>)}
                       </select>
                     </td>
-                    <td><button className="btn btn-danger btn-sm" onClick={() => deleteEvent(ev.id)}><TrashIcon size={13} /></button></td>
+                    <td><button className="btn btn-danger btn-sm" onClick={() => deleteEvent(ev.id)} title="Cancel event"><TrashIcon size={13} /></button></td>
                   </tr>
                 );
               })}

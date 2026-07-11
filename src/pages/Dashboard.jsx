@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../supabaseClient';
+import { getActivePolls, getVisibleEvents, getMySuggestions, toggleInterest as toggleInterestRequest, publicError } from '../lib/api';
 import { useProfile, isEventPast } from '../lib/useProfile';
 import StudentLayout from '../components/StudentLayout';
 import { PollCard, EventRow } from '../components/cards';
@@ -18,78 +18,44 @@ export default function Dashboard() {
   const userId = session?.user?.id || null;
 
   const [polls, setPolls] = useState([]);
-  const [votes, setVotes] = useState([]);
   const [events, setEvents] = useState([]);
   const [mine, setMine] = useState([]);
-  const [counts, setCounts] = useState({});
   const [busyKey, setBusyKey] = useState(null);
   const [error, setError] = useState('');
   const [dataLoading, setDataLoading] = useState(true);
 
-  const loadVotes = useCallback(async () => {
-    if (!supabase) return;
-    const { data } = await supabase.from('votes').select('suggestion_id, user_id, vote_type');
-    setVotes(data || []);
-  }, []);
 
   const loadAll = useCallback(async () => {
-    if (!supabase) { setDataLoading(false); return; }
     setDataLoading(true);
     setError('');
-    const [suggRes, evRes, mineRes, attRes] = await Promise.all([
-      supabase.from('suggestions').select('id, text, campus, cluster_label, status').not('cluster_label', 'is', null),
-      supabase.from('events').select('*').order('event_date', { ascending: true }),
-      userId
-        ? supabase.from('suggestions').select('id, status').eq('submitted_by', userId)
-        : Promise.resolve({ data: [] }),
-      supabase.from('event_attendees').select('event_id'),
-    ]);
-    if (suggRes.error) setError(suggRes.error.message);
-    setPolls(suggRes.data || []);
-    setEvents(evRes.data || []);
-    setMine(mineRes.data || []);
-    const cmap = {};
-    (attRes.data || []).forEach((r) => { cmap[r.event_id] = (cmap[r.event_id] || 0) + 1; });
-    setCounts(cmap);
-    await loadVotes();
-    setDataLoading(false);
-  }, [userId, loadVotes]);
-
-  useEffect(() => { if (!loading) loadAll(); }, [loading, loadAll]);
+    try {
+      const [pollRows, eventRows, ownRows] = await Promise.all([
+        getActivePolls(), getVisibleEvents(), getMySuggestions(userId),
+      ]);
+      setPolls(pollRows || []);
+      setEvents(eventRows || []);
+      setMine(ownRows || []);
+    } catch (e) { setError(publicError(e, 'Could not load the dashboard.')); }
+    finally { setDataLoading(false); }
+  }, [userId]);
 
   useEffect(() => {
-    if (!supabase) return undefined;
-    const ch = supabase
-      .channel('home-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'votes' }, () => loadVotes())
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
-  }, [loadVotes]);
+    if (loading) return undefined;
+    const timer = setTimeout(() => { void loadAll(); }, 0);
+    return () => clearTimeout(timer);
+  }, [loading, loadAll]);
 
-  const countFor = useCallback(
-    (sid) => votes.filter((v) => v.suggestion_id === sid && v.vote_type === 'interested').length,
-    [votes],
-  );
-  const didVote = useCallback(
-    (sid) => votes.some((v) => v.suggestion_id === sid && v.user_id === userId && v.vote_type === 'interested'),
-    [votes, userId],
-  );
+
+  const countFor = useCallback((sid) => Number(polls.find((row) => row.id === sid)?.interested_count || 0), [polls]);
+  const didVote = useCallback((sid) => !!polls.find((row) => row.id === sid)?.i_voted, [polls]);
 
   const toggleInterest = async (sid) => {
-    if (!supabase || !userId) return;
+    if (!userId) return;
     setBusyKey(sid);
     setError('');
-    if (didVote(sid)) {
-      const { error: e } = await supabase.from('votes').delete()
-        .eq('suggestion_id', sid).eq('user_id', userId).eq('vote_type', 'interested');
-      if (e) setError(e.message);
-    } else {
-      const { error: e } = await supabase.from('votes')
-        .insert({ suggestion_id: sid, vote_type: 'interested' });
-      if (e) setError(e.message);
-    }
-    await loadVotes();
-    setBusyKey(null);
+    try { await toggleInterestRequest(sid); await loadAll(); }
+    catch (e) { setError(publicError(e, 'Could not update your vote.')); }
+    finally { setBusyKey(null); }
   };
 
   const upcoming = useMemo(
@@ -174,7 +140,7 @@ export default function Dashboard() {
       ) : (
         <div className="grid">
           {upcoming.slice(0, 4).map((ev) => (
-            <EventRow key={ev.id} event={ev} goingCount={counts[ev.id] || 0} showDescription={false}
+            <EventRow key={ev.id} event={ev} goingCount={Number(ev.going_count || 0)} showDescription={false}
               right={<button className="btn btn-secondary btn-sm" onClick={() => navigate('/events')}>Details</button>} />
           ))}
         </div>

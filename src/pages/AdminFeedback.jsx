@@ -22,7 +22,7 @@ export default function AdminFeedback() {
     setDataLoading(true);
     setError('');
     const [fRes, eRes] = await Promise.all([
-      supabase.from('feedback').select('*').order('created_at', { ascending: false }),
+      supabase.from('feedback').select('*').order('created_at', { ascending: false }).limit(500),
       supabase.from('events').select('id, title'),
     ]);
     if (fRes.error) setError(fRes.error.message);
@@ -31,7 +31,11 @@ export default function AdminFeedback() {
     setDataLoading(false);
   }, []);
 
-  useEffect(() => { if (!loading) load(); }, [loading, load]);
+  useEffect(() => {
+    if (loading) return undefined;
+    const timer = setTimeout(() => { void load(); }, 0);
+    return () => clearTimeout(timer);
+  }, [loading, load]);
 
   const titleOf = useCallback((eid) => (events.find((e) => e.id === eid) || {}).title || 'Event', [events]);
 

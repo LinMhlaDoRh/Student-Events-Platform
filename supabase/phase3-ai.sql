@@ -1,18 +1,5 @@
--- Phase 3: AI clustering + category tagging support.
---
--- `cluster_label` already exists on suggestions. This adds the `category`
--- column the AI pass fills in, constrained to the same set events use.
---
--- Run this in the Supabase SQL editor (Dashboard -> SQL).
-
-alter table public.suggestions
-  add column if not exists category text;
-
-do $$
-begin
-  alter table public.suggestions
-    add constraint suggestions_category_check
-    check (category is null or category in ('sports','social','academic','cultural','other'));
-exception
-  when duplicate_object then null;
-end $$;
+-- Retired security-sensitive phase script: phase3-ai.sql
+-- New projects: run supabase/fresh-install.sql, then the comprehensive migration.
+-- Existing projects: run supabase/migrations/20260711133000_comprehensive_security_remediation.sql.
+-- The previous contents were removed because running an old phase independently
+-- could recreate permissive policies or bypass the current security model.

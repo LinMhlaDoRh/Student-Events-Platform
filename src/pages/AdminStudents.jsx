@@ -30,13 +30,17 @@ export default function AdminStudents() {
     const { data, error: e } = await supabase
       .from('users')
       .select('id, full_name, email, campus, role, created_at')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false }).limit(500);
     if (e) setError(e.message);
     setRows(data || []);
     setDataLoading(false);
   }, []);
 
-  useEffect(() => { if (!loading) load(); }, [loading, load]);
+  useEffect(() => {
+    if (loading) return undefined;
+    const timer = setTimeout(() => { void load(); }, 0);
+    return () => clearTimeout(timer);
+  }, [loading, load]);
 
   const restricted = useMemo(() => rows.length <= 1, [rows]);
 
