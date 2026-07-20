@@ -1,6 +1,10 @@
+<<<<<<< HEAD:src/auth.css
 /* Auth screens */
 
 .auth-page {
+=======
+.bolt-auth-page {
+>>>>>>> 9c72c567068cfc14f91a4ea0202eae627866a38b:src/bolt-auth.css
   min-height: 100vh;
   display: flex;
   background-color: #09101e;
@@ -341,7 +345,62 @@
   padding-right: 2.5rem;
 }
 
+<<<<<<< HEAD:src/auth.css
 .auth-password-strength {
+=======
+.bolt-switch-auth {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.bolt-switch-auth a {
+  color: #3b82f6;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.bolt-switch-auth a:hover {
+  color: #60a5fa;
+  text-decoration: underline;
+}
+
+.bolt-role-toggles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.bolt-role-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: rgba(255, 255, 255, 0.03);
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.bolt-role-btn:hover {
+  color: #cbd5e1;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.bolt-role-btn.active {
+  background-color: rgba(37, 99, 235, 0.15);
+  border-color: rgba(37, 99, 235, 0.5);
+  color: white;
+}
+
+.bolt-password-strength {
+>>>>>>> 9c72c567068cfc14f91a4ea0202eae627866a38b:src/bolt-auth.css
   position: absolute;
   left: 0;
   right: 0;
