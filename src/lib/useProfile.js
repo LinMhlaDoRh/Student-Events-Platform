@@ -3,7 +3,7 @@
  *
  * Role and campus are read from the trusted server-side row. If the row is
  * absent (e.g. during the brief window after signup), auth user_metadata
- * provides a fallback for name and campus only — role always defaults to
+ * provides a fallback for name and campus only; role always defaults to
  * 'student' when no database record exists.
  *
  * Returns { loading, session, profile }.

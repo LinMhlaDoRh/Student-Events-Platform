@@ -1,4 +1,4 @@
--- Comprehensive security remediation for the Richfield Student Events Platform.
+-- Comprehensive security remediation for Student Events.
 -- Apply once to the existing Supabase project. Safe to re-run.
 
 begin;
@@ -6,8 +6,8 @@ begin;
 -- Remove shared/public demo identities, including synthetic ghost accounts with
 -- known password hashes. Cascading foreign keys remove only their owned demo rows.
 delete from auth.users
-where email in ('admin.demo@richfield.ac.za','student.demo@richfield.ac.za')
-   or email like 'demo.student%@richfield-demo.local';
+where email in ('admin.demo@example.com','student.demo@example.com')
+   or email like 'demo.student%@demo.local';
 
 -- ---------------------------------------------------------------------------
 -- Shared helpers and immutable audit trail

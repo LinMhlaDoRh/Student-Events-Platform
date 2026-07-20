@@ -5,7 +5,7 @@ begin;
 do $$
 declare n integer;
 begin
-  select count(*) into n from auth.users where email in('admin.demo@richfield.ac.za','student.demo@richfield.ac.za') or email like 'demo.student%@richfield-demo.local';
+  select count(*) into n from auth.users where email in('admin.demo@example.com','student.demo@example.com') or email like 'demo.student%@demo.local';
   if n<>0 then raise exception 'Shared demo identities still exist'; end if;
 
   select count(*) into n from pg_policies where schemaname='public' and tablename='votes' and qual='true';

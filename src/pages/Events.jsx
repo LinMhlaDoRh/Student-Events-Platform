@@ -169,7 +169,7 @@ export default function Events() {
       <Modal
         open={!!fbEvent}
         onClose={() => setFbEvent(null)}
-        title={fbEvent ? `Feedback — ${fbEvent.title}` : 'Feedback'}
+        title={fbEvent ? `Feedback: ${fbEvent.title}` : 'Feedback'}
         footer={(
           <>
             <button className="btn btn-ghost" onClick={() => setFbEvent(null)}>Cancel</button>

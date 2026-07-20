@@ -158,7 +158,7 @@ export default function AdminEvents() {
                     </td>
                     <td><Badge tone="gray">{CATEGORY_LABELS[ev.category] || titleize(ev.category)}</Badge></td>
                     <td className="num"><span className="attend-count"><UsersIcon size={13} /> {goingCount(ev.id)}</span></td>
-                    <td>{fb ? <span className="attend-count"><StarIcon size={13} /> {fb.avg} ({fb.count})</span> : <span className="muted-cell">—</span>}</td>
+                    <td>{fb ? <span className="attend-count"><StarIcon size={13} /> {fb.avg} ({fb.count})</span> : <span className="muted-cell">-</span>}</td>
                     <td>
                       <select className="select select-sm" value={ev.status || 'upcoming'} onChange={(e) => changeField(ev.id, 'status', e.target.value)}>
                         {STATUSES.map((s) => <option key={s} value={s}>{titleize(s)}</option>)}
@@ -190,7 +190,7 @@ export default function AdminEvents() {
             <label className="field-label">Confirm from a student idea <span className="optional">(optional)</span></label>
             <select className="select" defaultValue="" onChange={(e) => e.target.value && pickIdea(e.target.value)}>
               <option value="">Start from scratch…</option>
-              {ideas.map((i) => <option key={i.id} value={i.id}>{i.cluster_label} — {i.text.slice(0, 50)}</option>)}
+              {ideas.map((i) => <option key={i.id} value={i.id}>{i.cluster_label}: {i.text.slice(0, 50)}</option>)}
             </select>
           </div>
         ) : null}

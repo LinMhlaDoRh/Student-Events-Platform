@@ -1,14 +1,7 @@
-/*
-  Richfield Student Events Platform — unified design system
-  ---------------------------------------------------------
-  Replaces the reference image's purple with the Login / Sign Up
-  primary blue (#2563eb). Modern SaaS dashboard look (Linear / Vercel feel):
-  soft shadows, rounded corners, consistent spacing, strong type hierarchy.
-  Desktop-first, optimized for 1440px, responsive down to mobile.
-*/
+/* Student Events design system */
 
 :root {
-  /* Primary accent — the exact blue used on Login / Sign Up */
+  /* Primary accent (matches auth screens) */
   --blue-50: #eff6ff;
   --blue-100: #dbeafe;
   --blue-200: #bfdbfe;
@@ -86,7 +79,7 @@ body {
 a { color: inherit; }
 
 /* ----------------------------------------------------------------
-   App shell — top navbar + left sidebar (student / light theme)
+   App shell - top navbar + left sidebar (student / light theme)
 ----------------------------------------------------------------- */
 .app-shell { min-height: 100vh; background: var(--bg); }
 

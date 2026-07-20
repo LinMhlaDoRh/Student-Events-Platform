@@ -213,7 +213,7 @@ export default function Suggestions() {
         })}
       </div>
 
-      <Toast show={toast}><SparkleIcon size={15} /> Idea submitted — thanks!</Toast>
+      <Toast show={toast}><SparkleIcon size={15} /> Idea submitted. Thanks!</Toast>
     </StudentLayout>
   );
 }

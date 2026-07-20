@@ -61,7 +61,7 @@ export default function AdminStudents() {
       {restricted ? (
         <div className="notice notice-blue">
           <InfoIcon size={16} />
-          <span>The student roster isn&apos;t available with the current database access rules (profiles are readable only by their owner). Enable an admin read policy on the users table to populate this list — no placeholder data is shown.</span>
+          <span>The student roster is restricted by current RLS rules (profiles are owner-readable only). Add an admin read policy on the users table to show the full list. No sample data is shown.</span>
         </div>
       ) : null}
 
@@ -76,11 +76,11 @@ export default function AdminStudents() {
             <tbody>
               {rows.map((u) => (
                 <tr key={u.id}>
-                  <td className="cell-name"><span className="avatar sm">{initials(u.full_name, u.email)}</span> {u.full_name || '—'}</td>
+                  <td className="cell-name"><span className="avatar sm">{initials(u.full_name, u.email)}</span> {u.full_name || '-'}</td>
                   <td className="muted-cell">{u.email}</td>
                   <td><Badge tone="blue">{prettyCampus(u.campus)}</Badge></td>
                   <td><Badge tone={u.role === 'admin' ? 'green' : 'gray'}>{u.role || 'student'}</Badge></td>
-                  <td className="muted-cell">{u.created_at ? fmtDate(u.created_at) : '—'}</td>
+                  <td className="muted-cell">{u.created_at ? fmtDate(u.created_at) : '-'}</td>
                 </tr>
               ))}
             </tbody>

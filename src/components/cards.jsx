@@ -15,7 +15,7 @@ const labelBadge = { marginBottom: 12, alignSelf: 'flex-start' };
 
 /*
   A poll card maps to one clustered suggestion (an idea the SRC has grouped).
-  The only real demand signal in the system is "Interested" — there is no
+  The only real demand signal in the system is "Interested". There is no
   "I'll attend" at the poll stage (attendance happens later on confirmed
   events), so we surface the real interested count + toggle only.
 */

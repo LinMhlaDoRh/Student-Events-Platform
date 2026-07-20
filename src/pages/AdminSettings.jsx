@@ -1,5 +1,5 @@
 /**
- * SRC admin settings: platform and campus overview.
+ * SRC admin settings: account and platform overview.
  */
 
 import React from 'react';
@@ -9,11 +9,6 @@ import { Loader, Badge } from '../components/ui';
 import { prettyCampus, initials } from '../lib/format';
 import { InfoIcon, MapPinIcon } from '../components/icons';
 
-/*
-  There is no settings/config table in v1, so this page surfaces the
-  signed-in admin's account details and read-only platform facts.
-  Editable, database-backed settings are a planned enhancement.
-*/
 export default function AdminSettings() {
   const { loading, profile } = useProfile();
 
@@ -37,7 +32,9 @@ export default function AdminSettings() {
           <p className="page-sub" style={emailText}>{profile?.email}</p>
           <div style={chipRow}>
             <Badge tone="green">Admin</Badge>
-            {profile?.campus ? <Badge tone="blue"><MapPinIcon size={12} /> {prettyCampus(profile.campus)}</Badge> : null}
+            {profile?.campus ? (
+              <Badge tone="blue"><MapPinIcon size={12} /> {prettyCampus(profile.campus)}</Badge>
+            ) : null}
           </div>
         </div>
       </div>
@@ -55,13 +52,16 @@ export default function AdminSettings() {
         </div>
         <div className="card card-pad">
           <h3 className="section-title nomargin">Platform</h3>
-          <p className="page-sub" style={emailText}>Richfield Student Events Platform</p>
+          <p className="page-sub" style={emailText}>Student Events</p>
         </div>
       </div>
 
       <div className="notice notice-blue" style={noticeTop}>
         <InfoIcon size={16} />
-        <span>Campuses and platform details are managed in code to keep the demo stable. Editable, database-backed settings are a planned enhancement.</span>
+        <span>
+          Campus list and platform name are defined in application config.
+          Database-backed settings can be added later if needed.
+        </span>
       </div>
     </AdminLayout>
   );

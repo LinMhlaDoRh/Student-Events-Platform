@@ -40,8 +40,8 @@ export default function AdminLayout({ profile, children }) {
         <div className="brand">
           <span className="brand-logo"><LogoMark /></span>
           <div>
-            <div className="brand-name">Richfield Events</div>
-            <div className="brand-sub">Admin Console</div>
+            <div className="brand-name">Student Events</div>
+            <div className="brand-sub">Admin</div>
           </div>
         </div>
         <div className="topbar-right" style={pushRight}>

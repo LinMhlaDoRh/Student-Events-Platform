@@ -18,8 +18,8 @@ Apply these settings before deploying to production.
 
 - Set Site URL to `https://student-events-platform.vercel.app`.
 - Keep only these redirect URLs:
-  - `https://student-events-platform.vercel.app/reset-password`
-  - `http://localhost:5173/reset-password` (local development only)
+ - `https://student-events-platform.vercel.app/reset-password`
+ - `http://localhost:5173/reset-password` (local development only)
 - Do not add wildcard production redirects.
 
 ## Rate limits

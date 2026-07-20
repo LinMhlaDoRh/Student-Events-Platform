@@ -16,7 +16,7 @@ import { VoteIcon } from '../components/icons';
   ------------
   Students vote on CLUSTERED ideas (suggestions an admin has given a
   cluster_label). Cross-campus visibility is intentional. The only signal is
-  "Interested" — attendance commitment happens later on confirmed events, so we
+  "Interested". Attendance commitment happens later on confirmed events, so we
   deliberately do not show an "I'll attend" control at the poll stage.
   Counts update live via a Supabase realtime channel on the votes table.
 */

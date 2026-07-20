@@ -22,7 +22,7 @@ import { supabase } from './supabaseClient';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import './styles.css';
-import './bolt-auth.css';
+import './auth.css';
 import './theme.css';
 
 const naStyles = {
@@ -36,7 +36,7 @@ const naStyles = {
 const AdminRoute = ({ session, role, children }) => {
   if (!session) return <Navigate to="/signin" replace />;
 
-  // Role still resolving — render nothing to avoid a wrong "not authorised" flash.
+  // Role still resolving; render nothing to avoid a wrong "not authorised" flash.
   if (role === null) return null;
 
   if (role !== 'admin') {

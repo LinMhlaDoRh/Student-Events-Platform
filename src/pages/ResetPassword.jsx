@@ -7,25 +7,28 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Lock, Eye, EyeOff, AlertCircle, ArrowRight } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
-const SUCCESS_TEXT = { color: '#4ade80', fontWeight: 600, marginBottom: '0.75rem' };
-const INVALID_TEXT = { marginBottom: '1rem' };
+const LOGO_MARK = (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+    <path d="M7 1L9.5 5.5H12L9 8.5L10 12.5L7 10L4 12.5L5 8.5L2 5.5H4.5L7 1Z" fill="white" />
+  </svg>
+);
+
+const SUCCESS_TEXT = { color: '#4ade80', fontWeight: 600, marginBottom: '0.75rem', textAlign: 'center' };
+const INVALID_TEXT = { marginBottom: '1rem', textAlign: 'center' };
 
 export default function ResetPassword() {
   const navigate = useNavigate();
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [done, setDone] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [ready, setReady] = useState(false);
   const [checking, setChecking] = useState(() => !!supabase);
 
   useEffect(() => {
-    if (!supabase) return;
-
-    // Only a PASSWORD_RECOVERY auth event authorizes this page. An ordinary
-    // signed-in session is not sufficient to change a password here.
+    if (!supabase) return undefined;
 
     const {
       data: { subscription },
@@ -37,159 +40,145 @@ export default function ResetPassword() {
     });
     const timeout = setTimeout(() => setChecking(false), 2500);
 
-    return () => { clearTimeout(timeout); subscription.unsubscribe(); };
+    return () => {
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setError("");
-    if (password.length < 12) { setError("Password must be at least 12 characters."); return; }
-    if (password !== confirm) { setError("Passwords do not match."); return; }
-    if (!supabase) { setError("Authentication is not configured. Please try again later."); return; }
+    setError('');
+    if (password.length < 12) { setError('Password must be at least 12 characters.'); return; }
+    if (password !== confirm) { setError('Passwords do not match.'); return; }
+    if (!supabase) { setError('Authentication is not configured. Please try again later.'); return; }
 
     setIsLoading(true);
     try {
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) throw updateError;
       setDone(true);
-      // Sign out so they log in fresh with the new password.
       await supabase.auth.signOut();
       setTimeout(() => navigate('/signin'), 2500);
     } catch {
-      setError("Could not update the password. Request a new recovery link and try again.");
+      setError('Could not update the password. Request a new recovery link and try again.');
     } finally {
       setIsLoading(false);
     }
   }
 
   return (
-    <div className="bolt-auth-page">
-      {/* Left panel */}
-      <div className="bolt-left-panel">
-        <div className="bolt-bg-pattern" />
+    <div className="auth-page">
+      <div className="auth-left-panel">
+        <div className="auth-bg-pattern" />
 
-        <div className="bolt-logo-header">
-          <div className="bolt-logo-icon">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M7 1L9.5 5.5H12L9 8.5L10 12.5L7 10L4 12.5L5 8.5L2 5.5H4.5L7 1Z" fill="white" />
-            </svg>
+        <div className="auth-logo-header">
+          <div className="auth-logo-icon">{LOGO_MARK}</div>
+          <span className="auth-logo-text">Student Events</span>
+        </div>
+
+        <div className="auth-hero">
+          <div className="auth-hero-text">
+            <h1>
+              Almost there.<br />
+              <span>Set your new password.</span>
+            </h1>
+            <p className="auth-hero-desc">
+              Choose a strong password you have not used before.
+            </p>
           </div>
-          <span className="bolt-logo-text">Richfield Events</span>
         </div>
 
-        <div className="bolt-hero-text">
-          <h1>
-            Almost there.<br />
-            <span>Set your new password.</span>
-          </h1>
-          <p className="bolt-hero-desc">
-            Choose a strong password you haven't used before, and you'll be back in your account in seconds.
-          </p>
-        </div>
-
-        <div className="bolt-credit">Built by LinMhlaDoRh</div>
+        <div className="auth-credit">Built by LinMhlaDoRh</div>
       </div>
 
-      {/* Right form panel */}
-      <div className="bolt-right-panel">
-        <div className="bolt-mobile-logo">
-          <div className="bolt-logo-icon">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M7 1L9.5 5.5H12L9 8.5L10 12.5L7 10L4 12.5L5 8.5L2 5.5H4.5L7 1Z" fill="white" />
-            </svg>
-          </div>
-          <span className="bolt-logo-text">Richfield Events</span>
+      <div className="auth-right-panel">
+        <div className="auth-mobile-logo">
+          <div className="auth-logo-icon">{LOGO_MARK}</div>
+          <span className="auth-logo-text">Student Events</span>
         </div>
 
-        <div className="bolt-auth-form-container">
-          <div className="bolt-auth-heading">
+        <div className="auth-form-container">
+          <div className="auth-heading">
             <h2>Set a new password</h2>
             <p>Choose a new password for your account</p>
           </div>
 
           {error && (
-            <div className="bolt-error">
-              <AlertCircle size={14} className="bolt-error-icon" />
+            <div className="auth-error">
+              <AlertCircle size={14} className="auth-error-icon" />
               {error}
             </div>
           )}
 
           {checking ? (
-            <div className="bolt-spinner" />
+            <div className="auth-spinner" />
           ) : done ? (
             <div>
-              <p style={SUCCESS_TEXT}>
-                Password updated. Taking you to sign in...
-              </p>
-              <p className="bolt-auth-link">
+              <p style={SUCCESS_TEXT}>Password updated. Taking you to sign in...</p>
+              <p className="auth-link">
                 <Link to="/signin">Go to sign in now</Link>
               </p>
             </div>
           ) : !ready ? (
             <div>
-              <p className="bolt-hero-desc" style={INVALID_TEXT}>
+              <p className="auth-hero-desc" style={INVALID_TEXT}>
                 This reset link is invalid or has expired. Request a new one from the sign-in page.
               </p>
-              <p className="bolt-auth-link">
+              <p className="auth-link">
                 <Link to="/signin">Back to sign in</Link>
               </p>
             </div>
           ) : (
             <>
-              <form onSubmit={handleSubmit} className="bolt-form">
-                <div className="bolt-field">
-                  <label className="bolt-label">New password</label>
-                  <div className="bolt-input-wrap">
-                    <Lock size={14} className="bolt-input-icon" />
+              <form onSubmit={handleSubmit} className="auth-form">
+                <div className="auth-field">
+                  <label className="auth-label" htmlFor="reset-password">New password</label>
+                  <div className="auth-input-wrap">
+                    <Lock size={14} className="auth-input-icon" />
                     <input
-                      type={showPassword ? "text" : "password"}
+                      id="reset-password"
+                      type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Min. 12 characters"
                       autoComplete="new-password"
-                      className="bolt-input"
+                      className="auth-input has-toggle"
                     />
                     <button
                       type="button"
+                      className="auth-password-toggle"
                       onClick={() => setShowPassword((v) => !v)}
-                      className="bolt-password-toggle"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
                     >
                       {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                     </button>
                   </div>
                 </div>
 
-                <div className="bolt-field">
-                  <label className="bolt-label">Confirm password</label>
-                  <div className="bolt-input-wrap">
-                    <Lock size={14} className="bolt-input-icon" />
+                <div className="auth-field">
+                  <label className="auth-label" htmlFor="reset-confirm">Confirm password</label>
+                  <div className="auth-input-wrap">
+                    <Lock size={14} className="auth-input-icon" />
                     <input
-                      type={showPassword ? "text" : "password"}
+                      id="reset-confirm"
+                      type={showPassword ? 'text' : 'password'}
                       value={confirm}
                       onChange={(e) => setConfirm(e.target.value)}
                       placeholder="Re-enter your password"
                       autoComplete="new-password"
-                      className="bolt-input"
+                      className="auth-input"
                     />
                   </div>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="bolt-submit-btn"
-                >
-                  {isLoading ? (
-                    <div className="bolt-spinner" />
-                  ) : (
-                    <>Update password <ArrowRight size={14} /></>
-                  )}
+                <button type="submit" disabled={isLoading} className="auth-submit-btn">
+                  {isLoading ? <div className="auth-spinner" /> : <>Update password <ArrowRight size={14} /></>}
                 </button>
               </form>
 
-              <p className="bolt-auth-link">
-                Remembered it?{" "}
-                <Link to="/signin">Sign in</Link>
+              <p className="auth-link">
+                Remembered it? <Link to="/signin">Sign in</Link>
               </p>
             </>
           )}

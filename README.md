@@ -1,61 +1,62 @@
-# Richfield Student Events Platform
+# Student Events
 
-A React + Supabase platform where students propose events, vote on active ideas, RSVP to campus-eligible events, and provide post-event feedback. Two SRC administrators—one per campus—review demand and manage events.
+Live: [student-events-platform.vercel.app](https://student-events-platform.vercel.app)
 
-## Security model
+Campus event platform for Musgrave and uMhlanga. Students propose ideas, vote on active polls, RSVP to events, and leave feedback. SRC admins review demand and manage the event lifecycle.
 
-The browser is untrusted. Sensitive writes use narrow Postgres functions, and Row Level Security is the authorization boundary. New users are always students; roles and campuses cannot be changed through the public API. Users must create and verify their own account.
+## Stack
 
-Anonymous suggestions are displayed to students and SRC reviewers without author identity. The owner mapping remains in the protected base table only to enforce one submission per round and permit a safe withdrawal.
+- React 19 + Vite
+- Supabase (Auth, Postgres, RLS, Edge Functions)
+- Vercel
 
-## Requirements
+## Features
 
-- Node.js 22.19.x
-- npm 11.6.x
-- A Supabase project
-- Vercel or another static host
-- Optional Gemini key for administrator-assisted clustering
+- Student signup with campus selection (Musgrave / uMhlanga)
+- Anonymous idea submission (one per active round)
+- Polling on clustered ideas
+- Event RSVP and post-event feedback
+- SRC admin console for suggestions, events, feedback, and students
+- Optional Gemini-assisted suggestion clustering (admin-only Edge Function)
+- RLS-backed authorization; role changes are not client-writable
 
 ## Local setup
 
-1. `npm ci`
-2. Copy `.env.example` to `.env` and set the public Supabase URL and anon key.
-3. For a new database, run `supabase/fresh-install.sql`, followed immediately by `supabase/migrations/20260711133000_comprehensive_security_remediation.sql`.
-4. For an existing database, back up first and run only the comprehensive migration.
-5. Apply every item in `docs/supabase-setup.md`.
-6. Deploy the Edge Function using `supabase/AI_SETUP.md`.
-7. Run `npm run verify`.
-8. Start locally with `npm run dev`.
+```bash
+npm ci
+cp .env.example .env
+# set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+npm run dev
+```
 
-## Administrator setup
+### Database
 
-The application cannot promote users. Promote administrators only through the Supabase SQL editor while signed in as the project owner. The database allows at most two administrators and rejects a second administrator for the same campus. Review the current administrator list before promotion.
+1. New project: run `supabase/fresh-install.sql`, then `supabase/migrations/20260711133000_comprehensive_security_remediation.sql`
+2. Existing project: back up first, then apply the migration only
+3. Apply dashboard settings in `docs/supabase-setup.md`
+4. Optional AI: see `supabase/AI_SETUP.md`
 
-## Synthetic portfolio data
+### Admin accounts
 
-`supabase/demo-seed.sql` adds non-destructive synthetic content only after real verified accounts exist. It never creates accounts, exposes passwords, changes roles, or wipes existing data. Do not publish shared credentials.
+Promote SRC admins only via the Supabase SQL editor. The schema allows at most two admins (one per campus). There is no in-app promotion path.
 
-## Main security controls
+## Scripts
 
-- One suggestion per user per active round, enforced transactionally
-- Server-derived suggestion owner, campus, status, round and timestamps
-- Lifecycle-aware voting, RSVP, feedback and withdrawal operations
-- Private voter and attendee identities with aggregate public counts
-- Thirty-day feedback window for campus-visible past events, including walk-in attendees
-- AI administrator authorization, rate limits, concurrency lock, timeout and strict output validation
-- Immutable security audit log for administrator changes
-- CSP and browser security headers
-- Exact dependency versions and GitHub security CI
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Local dev server |
+| `npm run build` | Production build |
+| `npm run lint` | ESLint |
+| `npm test` | Static security checks |
+| `npm run verify` | lint + test + build |
 
-## Release gate
+## Security notes
 
-Do not deploy unless:
+- Browser uses the public anon key only; RLS is the trust boundary
+- Sensitive writes go through narrow Postgres RPCs
+- Gemini and service-role keys stay in Edge Function secrets (never `VITE_*`)
+- See `SECURITY.md` for the full model
 
-- GitHub Security CI passes
-- Database regression assertions pass (`supabase/tests/security_regression.sql`)
-- Student and admin negative authorization tests pass in staging
-- Both administrators use named accounts with TOTP enabled
-- Email confirmation, CAPTCHA, leaked-password protection and safe redirects are enabled
-- The production build contains no source maps or shared credentials
+## License
 
-See `SECURITY.md` and `TESTING_GUIDE.md` for details.
+Private portfolio project. All rights reserved.

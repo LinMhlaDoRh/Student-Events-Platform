@@ -16,7 +16,7 @@ export const supabase = supabaseUrl && supabaseKey
         detectSessionInUrl: true,
       },
       global: {
-        headers: { 'X-Client-Info': 'richfield-events-web/1.0' },
+        headers: { 'X-Client-Info': 'student-events-web/1.0' },
       },
     })
   : null

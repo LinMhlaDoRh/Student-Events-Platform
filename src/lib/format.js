@@ -1,11 +1,11 @@
-/* Shared formatting + small helpers used across the platform. */
+/* Shared formatting helpers. */
 
 /* Campus is stored lowercase in Supabase ('musgrave' | 'umhlanga'). */
 export function prettyCampus(raw) {
   const c = (raw || '').toLowerCase();
   if (c === 'musgrave') return 'Musgrave';
   if (c === 'umhlanga') return 'uMhlanga';
-  return raw || 'Richfield';
+  return raw || '-';
 }
 
 /* Event campus_scope ('both' | 'musgrave' | 'umhlanga'). */
@@ -13,7 +13,7 @@ export function prettyScope(s) {
   if (s === 'both') return 'Both Campuses';
   if (s === 'musgrave') return 'Musgrave';
   if (s === 'umhlanga') return 'uMhlanga';
-  return s || '—';
+  return s || '-';
 }
 
 export function fmtDate(d) {
@@ -27,7 +27,13 @@ export function fmtDateTime(d) {
   if (!d) return 'Date TBA';
   const dt = new Date(d);
   if (Number.isNaN(dt.getTime())) return 'Date TBA';
-  return dt.toLocaleString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  return dt.toLocaleString('en-ZA', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 export function fmtShortDay(d) {
@@ -49,7 +55,6 @@ export function firstName(name, email) {
   return raw.split('@')[0].split(/[\s._-]+/)[0];
 }
 
-/* Title-case a category / status token for display. */
 export function titleize(s) {
   if (!s) return '';
   return s.charAt(0).toUpperCase() + s.slice(1);

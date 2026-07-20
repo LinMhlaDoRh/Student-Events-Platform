@@ -38,8 +38,8 @@ export default function StudentLayout({ profile, children }) {
         <div className="brand">
           <span className="brand-logo"><LogoMark /></span>
           <div>
-            <div className="brand-name">Richfield Events</div>
-            <div className="brand-sub">Student Events Platform</div>
+            <div className="brand-name">Student Events</div>
+            <div className="brand-sub">Musgrave & uMhlanga</div>
           </div>
         </div>
 
