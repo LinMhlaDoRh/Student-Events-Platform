@@ -1,10 +1,6 @@
-<<<<<<< HEAD:src/auth.css
 /* Auth screens */
 
 .auth-page {
-=======
-.bolt-auth-page {
->>>>>>> 9c72c567068cfc14f91a4ea0202eae627866a38b:src/bolt-auth.css
   min-height: 100vh;
   display: flex;
   background-color: #09101e;
@@ -20,12 +16,6 @@
   padding: 3rem;
   position: relative;
   overflow: hidden;
-}
-
-@media (min-width: 1024px) {
-  .auth-left-panel {
-    display: flex;
-  }
 }
 
 .auth-bg-pattern {
@@ -46,13 +36,24 @@
   background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.1), transparent);
 }
 
-.auth-logo-header,
-.auth-mobile-logo {
+.auth-logo-header {
   display: flex;
   align-items: center;
   gap: 0.625rem;
   position: relative;
   z-index: 1;
+}
+
+.auth-mobile-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 24rem;
+  margin-bottom: 2rem;
 }
 
 .auth-logo-icon {
@@ -171,33 +172,6 @@
   overflow-y: auto;
 }
 
-@media (min-width: 640px) {
-  .auth-right-panel {
-    padding-left: 2.5rem;
-    padding-right: 2.5rem;
-  }
-}
-
-@media (min-width: 1024px) {
-  .auth-right-panel {
-    padding-left: 4rem;
-    padding-right: 4rem;
-  }
-}
-
-.auth-mobile-logo {
-  width: 100%;
-  max-width: 24rem;
-  margin-bottom: 2rem;
-  justify-content: center;
-}
-
-@media (min-width: 1024px) {
-  .auth-mobile-logo {
-    display: none;
-  }
-}
-
 .auth-form-container {
   width: 100%;
   max-width: 24rem;
@@ -222,7 +196,19 @@
   margin: 0.35rem 0 0;
 }
 
-.auth-error,
+.auth-error {
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  background-color: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
 .auth-success {
   margin-bottom: 1.25rem;
   display: flex;
@@ -231,15 +217,6 @@
   border-radius: 0.75rem;
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
-}
-
-.auth-error {
-  background-color: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  color: #f87171;
-}
-
-.auth-success {
   background-color: rgba(22, 163, 74, 0.08);
   border: 1px solid rgba(22, 163, 74, 0.22);
   color: #16a34a;
@@ -345,62 +322,7 @@
   padding-right: 2.5rem;
 }
 
-<<<<<<< HEAD:src/auth.css
 .auth-password-strength {
-=======
-.bolt-switch-auth {
-  margin-top: 1.5rem;
-  text-align: center;
-  font-size: 0.875rem;
-  color: #64748b;
-}
-
-.bolt-switch-auth a {
-  color: #3b82f6;
-  font-weight: 500;
-  text-decoration: none;
-}
-
-.bolt-switch-auth a:hover {
-  color: #60a5fa;
-  text-decoration: underline;
-}
-
-.bolt-role-toggles {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
-}
-
-.bolt-role-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.625rem;
-  border-radius: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background-color: rgba(255, 255, 255, 0.03);
-  color: #64748b;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.bolt-role-btn:hover {
-  color: #cbd5e1;
-  border-color: rgba(255, 255, 255, 0.15);
-}
-
-.bolt-role-btn.active {
-  background-color: rgba(37, 99, 235, 0.15);
-  border-color: rgba(37, 99, 235, 0.5);
-  color: white;
-}
-
-.bolt-password-strength {
->>>>>>> 9c72c567068cfc14f91a4ea0202eae627866a38b:src/bolt-auth.css
   position: absolute;
   left: 0;
   right: 0;
@@ -417,10 +339,21 @@
   transition: background-color 0.2s;
 }
 
-.auth-strength-bar.red { background-color: #ef4444; }
-.auth-strength-bar.orange { background-color: #fb923c; }
-.auth-strength-bar.yellow { background-color: #facc15; }
-.auth-strength-bar.green { background-color: #4ade80; }
+.auth-strength-bar.red {
+  background-color: #ef4444;
+}
+
+.auth-strength-bar.orange {
+  background-color: #fb923c;
+}
+
+.auth-strength-bar.yellow {
+  background-color: #facc15;
+}
+
+.auth-strength-bar.green {
+  background-color: #4ade80;
+}
 
 .auth-field.has-strength .auth-input-wrap {
   margin-bottom: 1.25rem;
@@ -463,10 +396,18 @@
 }
 
 @keyframes auth-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.auth-link,
+.auth-link {
+  text-align: center;
+  color: #475569;
+  font-size: 0.875rem;
+  margin-top: 1.5rem;
+}
+
 .auth-switch {
   text-align: center;
   color: #475569;
@@ -474,14 +415,22 @@
   margin-top: 1.5rem;
 }
 
-.auth-link a,
+.auth-link a {
+  color: #cbd5e1;
+  text-decoration: none;
+  font-weight: 500;
+}
+
 .auth-switch a {
   color: #cbd5e1;
   text-decoration: none;
   font-weight: 500;
 }
 
-.auth-link a:hover,
+.auth-link a:hover {
+  color: #fff;
+}
+
 .auth-switch a:hover {
   color: #fff;
 }
@@ -499,9 +448,34 @@
   color: #cbd5e1;
 }
 
-/* Avoid iOS Safari zoom on focus for inputs under 16px */
+/* Responsive */
+@media (min-width: 640px) {
+  .auth-right-panel {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .auth-left-panel {
+    display: flex;
+  }
+
+  .auth-right-panel {
+    padding-left: 4rem;
+    padding-right: 4rem;
+  }
+
+  .auth-mobile-logo {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
-  .auth-input,
+  .auth-input {
+    font-size: 16px;
+  }
+
   .auth-input-select {
     font-size: 16px;
   }
