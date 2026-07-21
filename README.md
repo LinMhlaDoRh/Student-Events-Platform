@@ -50,6 +50,16 @@ Promote SRC admins only via the Supabase SQL editor. The schema allows at most t
 | `npm test` | Static security checks |
 | `npm run verify` | lint + test + build |
 
+## Portfolio sample data
+
+`scripts/seed-portfolio.mjs` creates clearly labelled synthetic student accounts and suggestions. Run it locally only with `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `ADMIN_PASSWORD` set in your terminal:
+
+```bash
+npm run seed:portfolio
+```
+
+Never commit the service-role key or admin password. Do not run the script against a database that already has two administrators.
+
 ## Security notes
 
 - Browser uses the public anon key only; RLS is the trust boundary

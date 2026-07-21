@@ -8,6 +8,14 @@ export default defineConfig([
   globalIgnores(['dist']),
   js.configs.recommended,
   {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: globals.node,
+    },
+  },
+  {
     files: ['**/*.{js,jsx}'],
     plugins: {
       'react-hooks': reactHooks,

@@ -129,21 +129,6 @@ async function ensureAdmin() {
 
     if (error) throw error;
     user = data.user;
-  } else {
-    const { data, error } = await supabase.auth.admin.updateUserById(
-      user.id,
-      {
-        password: adminPassword,
-        email_confirm: true,
-        user_metadata: {
-          full_name: 'Mlindosi',
-          campus: 'musgrave',
-        },
-      },
-    );
-
-    if (error) throw error;
-    user = data.user;
   }
 
   const { data: currentProfile, error: profileReadError } = await supabase
